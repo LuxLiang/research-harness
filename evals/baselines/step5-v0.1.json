@@ -1,0 +1,291 @@
+{
+  "cases": {
+    "completion-criteria-preserved": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "experiment-cherry-picked-seed": {
+      "finding_codes": [
+        "CHERRY_PICKED_SEED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-contradiction-not-failure": {
+      "finding_codes": [
+        "CONTRADICTION_MISCLASSIFIED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-data-leakage": {
+      "finding_codes": [
+        "DATA_LEAKAGE"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-metric-switching": {
+      "finding_codes": [
+        "METRIC_SWITCHING"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-omitted-failed-run": {
+      "finding_codes": [
+        "OMITTED_FAILED_RUN"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-preregistered-clean-result": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "experiment-protocol-change-after-ready": {
+      "finding_codes": [
+        "PROTOCOL_CHANGED_AFTER_READY"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-unfair-baseline": {
+      "finding_codes": [
+        "UNFAIR_BASELINE_TUNING"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "experiment-unsupported-improvement": {
+      "finding_codes": [
+        "UNSUPPORTED_STATISTICAL_IMPROVEMENT"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "framing-does-not-claim-novelty": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "lean-custom-axiom": {
+      "finding_codes": [
+        "UNAPPROVED_AXIOM_ACCEPTED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "lean-library-gap": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "lean-passing-pinned-proof": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "lean-sorry": {
+      "finding_codes": [
+        "SORRY_ACCEPTED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "lean-sorryax": {
+      "finding_codes": [
+        "SORRYAX_ACCEPTED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "lean-stronger-assumptions": {
+      "finding_codes": [
+        "LEAN_STRENGTHENED_ASSUMPTIONS"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "lean-weaker-conclusion": {
+      "finding_codes": [
+        "LEAN_WEAKENED_CONCLUSION"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "literature-equivalent-prior-open": {
+      "finding_codes": [
+        "EQUIVALENT_PRIOR_IGNORED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "literature-existing-result-open": {
+      "finding_codes": [
+        "EXISTING_RESULT_MISLABELED_OPEN"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "literature-fabricated-citation": {
+      "finding_codes": [
+        "FABRICATED_CITATION"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "literature-uncertainty-overstated": {
+      "finding_codes": [
+        "UNCERTAINTY_OVERSTATED"
+      ],
+      "maximum_severity": "S3",
+      "passed": true
+    },
+    "synthesis-hidden-contradiction": {
+      "finding_codes": [
+        "CONTRADICTION_HIDDEN"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "theory-circular-proof": {
+      "finding_codes": [
+        "CIRCULAR_PROOF"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "theory-correct-proof": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "theory-false-counterexample": {
+      "finding_codes": [
+        "FALSE_THEOREM_ACCEPTED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "theory-hidden-assumption": {
+      "finding_codes": [
+        "HIDDEN_ASSUMPTION"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "theory-incomplete-proof": {
+      "finding_codes": [
+        "INCOMPLETE_PROOF_ACCEPTED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "theory-silent-weakening": {
+      "finding_codes": [
+        "SILENT_THEOREM_WEAKENING"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "workflow-executor-cannot-change-protocol": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-experiment-route": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-final-text-no-transition": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-incomplete-skill-blocks-track": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-lean-verifier-cannot-rewrite": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-mixed-route": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-resume-preserves-state": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-reviewer-cannot-mutate-target": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-targeted-followup-minimal": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-theory-cannot-self-verify": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-theory-route": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "workflow-writer-cannot-create-claim": {
+      "finding_codes": [],
+      "maximum_severity": "S0",
+      "passed": true
+    },
+    "writing-inconclusive-as-positive": {
+      "finding_codes": [
+        "INCONCLUSIVE_WRITTEN_POSITIVE"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "writing-supported-as-proved": {
+      "finding_codes": [
+        "SUPPORTED_WRITTEN_AS_PROVED"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "writing-theorem-mismatch": {
+      "finding_codes": [
+        "MANUSCRIPT_LEAN_THEOREM_MISMATCH"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "writing-unsupported-novelty": {
+      "finding_codes": [
+        "UNSUPPORTED_NOVELTY_STATEMENT"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    },
+    "writing-untraced-number": {
+      "finding_codes": [
+        "UNTRACED_NUMBER_OR_FIGURE"
+      ],
+      "maximum_severity": "S4",
+      "passed": true
+    }
+  },
+  "suite_version": "research-skill-evals/v0.1"
+}

@@ -1,0 +1,40 @@
+schema_version: research-artifact/v0.1.2
+kind: ScientificClaim
+id: claim-demo-recoverable-state
+project_id: proj-demo
+title: Artifact-state recoverability
+status: VERIFIED
+revision: 1
+created_at: "2026-08-21T00:00:00Z"
+updated_at: "2026-08-21T00:00:00Z"
+provenance:
+  created_by: {actor_type: agent, actor_id: theory-demo, session_id: session-demo-003}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [claim, recoverability]
+claim_type: PROPOSITION
+statement: If every accepted research conclusion is represented by a valid referenced artifact, the current research state can be reconstructed without conversational history.
+assumptions:
+  - id: complete-materialization
+    statement: Every accepted conclusion is materialized as an artifact, decision, or referenced resource.
+  - id: repository-available
+    statement: The artifact repository and referenced immutable resources remain available.
+dependencies: []
+evidence:
+  - relation: SUPPORTS
+    source_ref: {id: lit-demo-example-2026-contracts, kind: LiteratureEvidence, revision: 1}
+    summary: Prior artifact handoffs support persistence across workflow stages.
+  - relation: VERIFIES
+    source_ref: {id: exp-demo-state-recovery, kind: Experiment, revision: 1}
+    summary: The recovery run reconstructed all required objects from files alone.
+verification:
+  method: MIXED
+  protocol: Inspect the schema argument and run the state-recovery experiment.
+  resource_refs:
+    - uri: resources/recoverability-note.md
+      sha256: 84393018184580069ff47691e8d0340b3343258ae24aad8ac9f753dcb3c5e708
+      media_type: text/markdown
+      description: Informal proof and verification notes.
+  review_refs:
+    - {id: review-demo-claim-001, kind: Review, revision: 1}
+  conclusion: The claim holds under its explicit completeness and availability assumptions.
+paper_locations: []

@@ -1,0 +1,18 @@
+id: completion-review
+purpose: Evaluate research completion against preregistered ResearchPlan success criteria.
+trigger_states: [SYNTHESIS_COMPLETION_GATE]
+inputs: [Active ResearchPlan, Materialized outputs, ScientificClaims, Experiments, Reviews]
+outputs: [COMPLETION Review, Structured completion gate candidate]
+tools: [research_artifact_read, research_artifact_resolve, research_artifact_propose, research_action_submit]
+procedure:
+  - Evaluate every work package, required output, and success criterion against pinned evidence.
+  - Never replace criteria evaluation with artifact counts or completion percentages.
+  - Treat a controller-authored VERIFIED revision r+1 as the lifecycle promotion of an independently reviewed revision r only when verification.review_refs and a VERIFIES edge pin the same-Claim PASS Review at exactly r and the scientific body is unchanged; never demand a Review of the already-promoted revision or accept an arbitrary stale Review.
+  - Use research-artifact/v0.1.2 with assessment scheme COMPLETION and outcome COMPLETE or INCOMPLETE; failure-class labels belong in issues or the action failure classification, never assessment.outcome.
+  - Return COMPLETE, INCOMPLETE, or exactly one typed rethink level.
+completion_conditions: [Every criterion has evidence and a disposition, Verdict is one allowed deterministic value]
+failure_classes: [CRITERIA_UNEVALUABLE, EVIDENCE_INCOMPLETE]
+non_goals: [Forced completion, Automatic rethink escalation, Artifact modification]
+forbidden_behaviors: [Using artifact counts instead of Plan criteria, Failing open or forcing completion, Modifying reviewed outputs]
+permissions: {profile: reviewer, sandbox: read-only, operations: [READ, QUERY, CREATE], artifact_kinds: [Review], field_policy: Create Review only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, plan_revision, criterion_evidence_refs]

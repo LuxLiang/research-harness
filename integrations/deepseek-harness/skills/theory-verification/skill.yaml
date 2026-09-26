@@ -1,0 +1,16 @@
+id: theory-verification
+purpose: Independently and adversarially verify an informal mathematical argument.
+trigger_states: [EXECUTION_TRACKS_THEORY_VERIFY]
+inputs: [Frozen ScientificClaim revision, Informal proof resource, Dependency Claims, Mathematical LiteratureEvidence]
+outputs: [Revision-pinned THEORY Review]
+tools: [research_artifact_read, research_artifact_resolve, resource_read, counterexample_check, research_artifact_propose, research_action_submit]
+procedure:
+  - Check assumptions, dependency validity, logical steps, dimensions, constants, and probabilistic conditions in topological order.
+  - Search boundary cases and counterexamples independently of the development session.
+  - Report PASS, a precise gap, false claim evidence, or typed rethink with locators.
+completion_conditions: [Every proof step is audited, Every failure has a locator and evidence, Review targets the exact Claim revision and commit, PASS requires every claimed proof resource to be revision-pinned with a verified SHA-256, The exact displayed Claim is checked literally without silently repairing a false clause]
+failure_classes: [PROOF_GAP, ASSUMPTION_GAP, FALSE_CLAIM, RETHINK_CLAIM, RETHINK_PLAN, RETHINK_QUESTION, VERIFICATION_INCONCLUSIVE]
+non_goals: [Rewriting the proof, Modifying the target Claim, Lean certification]
+forbidden_behaviors: [Modifying the reviewed Claim or proof, Sharing the theory-development session, Passing a proof with an unresolved gap, Treating an action-local scratch path as pinned evidence, Charitably replacing a false displayed statement with a nearby true statement]
+permissions: {profile: reviewer, sandbox: read-only, operations: [READ, QUERY, CREATE], artifact_kinds: [Review], field_policy: Create Review only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, target_revision, target_git_commit, independent_session]

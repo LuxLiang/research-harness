@@ -1,0 +1,16 @@
+id: proposal-revision
+purpose: Produce an authorized immutable proposal revision and exact change log.
+trigger_states: [PROPOSAL_REVISION]
+inputs: [Current ResearchProposal revision, Novelty Review, PROPOSAL_CORRECTNESS Review, Accepted Decisions]
+outputs: [Immutable proposal Markdown, Change log, ResearchProposal revision]
+tools: [research_artifact_read, research_artifact_resolve, resource_read, research_proposal_write, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Preserve source language section order and academic voice.
+  - Apply minor fixes and only human-authorized material changes.
+  - Record issue IDs decisions locators and dispositions in the change log.
+completion_conditions: [Every material change has authority, Current document and change log hashes resolve, No immutable input was overwritten]
+failure_classes: [HUMAN_DECISION_REQUIRED, UNAUTHORIZED_MATERIAL_CHANGE, SOURCE_MAP_GAP, EVIDENCE_GAP]
+non_goals: [Changing research intent without approval, Producing scientific results]
+forbidden_behaviors: [Overwriting immutable resources, Reordering without authority, Inventing evidence, Resolving major issues without a Decision]
+permissions: {profile: producer, sandbox: read-only, operations: [READ, QUERY, RESOURCE_WRITE, REVISE], artifact_kinds: [ResearchProposal], field_policy: Full target ResearchProposal plus create-only revision resources, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, proposal_revision, decision_refs, document_sha256, change_log_sha256]

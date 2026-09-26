@@ -1,0 +1,16 @@
+id: experiment-execution
+purpose: Faithfully execute a frozen Experiment and preserve all raw outcomes.
+trigger_states: [EXECUTION_TRACKS_EXPERIMENT_RUN]
+inputs: [READY Experiment, Protocol lock, Pinned code data configuration and environment]
+outputs: [Run records, Raw output resources, Execution failures]
+tools: [research_artifact_read, resource_read, bash, filesystem, runtime, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Verify the protocol hash and derive stable run IDs before execution.
+  - Execute all preregistered runs and preserve raw outputs, failures, and checksums.
+  - Record engineering deviations; stop and request redesign for scientific protocol changes.
+completion_conditions: [Every required run terminates, Every run pins protocol code data config and environment, Raw outputs and failures are retained]
+failure_classes: [IMPLEMENTATION_FAILURE, TIMEOUT, RESOURCE_EXHAUSTED, PROTOCOL_DEVIATION, DATA_CORRUPTION]
+non_goals: [Interpreting results, Selecting favorable seeds, Changing locked protocol fields]
+forbidden_behaviors: [Changing locked scientific protocol fields, Omitting failed negative or contradictory runs, Selecting metrics seeds or thresholds after seeing results]
+permissions: {profile: experiment, sandbox: run-write, operations: [READ, QUERY, VALIDATE, REVISE, RESOURCE_WRITE, RUN], artifact_kinds: [Experiment], field_policy: Append runs and update execution status only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, protocol_revision, protocol_sha256, code_commit, dataset_hashes, config_hash, environment_hash]

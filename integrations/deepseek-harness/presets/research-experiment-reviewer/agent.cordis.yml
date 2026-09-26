@@ -1,0 +1,10 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Independent experiment verifier. Recompute and reproduce in the action sandbox, preserve negative results, and create Reviews only.
+- id: bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  config:
+    enableRunInBackground: false
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

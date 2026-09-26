@@ -1,0 +1,51 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: synthesis-hidden-contradiction
+    title: Synthesis cannot hide contradiction
+    domain: synthesis-writing
+    skills: [research-synthesis, consistency-review]
+    evaluator: synthesis-writing
+    input: {contradictory_evidence: true, contradiction_preserved: false}
+    expected_findings: [{code: CONTRADICTION_HIDDEN, severity: S4}]
+  - id: writing-unsupported-novelty
+    title: Novelty statement requires verified trace
+    domain: synthesis-writing
+    skills: [scientific-writing, final-review]
+    evaluator: synthesis-writing
+    input: {novelty_statement: true, novelty_trace_verified: false}
+    expected_findings: [{code: UNSUPPORTED_NOVELTY_STATEMENT, severity: S4}]
+  - id: writing-supported-as-proved
+    title: Supported claim cannot be written as proved
+    domain: synthesis-writing
+    skills: [scientific-writing, final-review]
+    evaluator: synthesis-writing
+    input: {claim_status: SUPPORTED, manuscript_assertion: PROVED}
+    expected_findings: [{code: SUPPORTED_WRITTEN_AS_PROVED, severity: S4}]
+  - id: writing-inconclusive-as-positive
+    title: Inconclusive experiment cannot be written as positive
+    domain: synthesis-writing
+    skills: [scientific-writing, final-review]
+    evaluator: synthesis-writing
+    input: {experiment_outcome: INCONCLUSIVE, manuscript_outcome: POSITIVE}
+    expected_findings: [{code: INCONCLUSIVE_WRITTEN_POSITIVE, severity: S4}]
+  - id: writing-untraced-number
+    title: Number or figure requires provenance
+    domain: synthesis-writing
+    skills: [scientific-writing, final-review]
+    evaluator: synthesis-writing
+    input: {major_result: figure-2, traceability_ref: null}
+    expected_findings: [{code: UNTRACED_NUMBER_OR_FIGURE, severity: S4}]
+  - id: writing-theorem-mismatch
+    title: Manuscript theorem must match verified Lean theorem
+    domain: synthesis-writing
+    skills: [semantic-alignment-review, scientific-writing, final-review]
+    evaluator: synthesis-writing
+    input: {claim_signature: forall-x-rate-n, lean_signature: forall-x-rate-n, manuscript_signature: exists-x-rate-sqrt-n}
+    expected_findings: [{code: MANUSCRIPT_LEAN_THEOREM_MISMATCH, severity: S4}]
+  - id: completion-criteria-preserved
+    title: Completion review preserves accepted evidence
+    domain: synthesis-writing
+    skills: [completion-review]
+    evaluator: synthesis-writing
+    input: {contradictory_evidence: false, novelty_statement: false}
+    expected_findings: []

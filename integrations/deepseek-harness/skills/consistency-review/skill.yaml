@@ -1,0 +1,17 @@
+id: consistency-review
+purpose: Audit consistency across tracks, evidence, novelty, formalization, and manuscript inputs.
+trigger_states: [CONSISTENCY_GATE]
+inputs: [Active ResearchPlan, ScientificClaims, Experiments, LiteratureEvidence, Lean and Review resources]
+outputs: [CONSISTENCY Review, Structured consistency gate candidate]
+tools: [research_artifact_read, research_artifact_resolve, resource_read, research_artifact_propose, research_action_submit]
+procedure:
+  - Check Theory to Experiment, Claim to Evidence, Literature to novelty, and Claim to Lean relationships.
+  - Detect stale revisions, contradictions, invalidated novelty, and semantic mismatches.
+  - Treat a controller-authored VERIFIED revision r+1 as the lifecycle promotion of independently reviewed revision r only when verification.review_refs and a VERIFIES edge pin a same-Claim PASS Review at exactly r and the scientific statement, assumptions, dependencies, and proof-resource refs are unchanged. Count that Review as current lifecycle evidence; arbitrary edits, skipped revisions, and stale Reviews remain STALE_EVIDENCE.
+  - Identify the smallest affected artifact and planned-output set for follow-up.
+completion_conditions: [Return PASS or a targeted typed failure, Every failure has target refs and output IDs]
+failure_classes: [STALE_EVIDENCE, CLAIM_EVIDENCE_CONFLICT, NOVELTY_INVALIDATED, SEMANTIC_MISMATCH]
+non_goals: [Direct artifact repair, Global reruns, Hiding contradictions]
+forbidden_behaviors: [Modifying reviewed artifacts, Ignoring stale or contradictory evidence, Requesting work outside the minimal affected set]
+permissions: {profile: reviewer, sandbox: read-only, operations: [READ, QUERY, CREATE], artifact_kinds: [Review], field_policy: Create Review only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, consistency_snapshot]

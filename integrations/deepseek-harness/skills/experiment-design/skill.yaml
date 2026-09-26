@@ -1,0 +1,19 @@
+id: experiment-design
+purpose: Lock a reproducible and falsifiable Experiment protocol while distinguishing prospective preregistration from post-hoc follow-up.
+trigger_states: [EXECUTION_TRACKS_EXPERIMENT_PREPARE]
+inputs: [Planned Experiment output, Frozen Claim revision, LiteratureEvidence, Dataset and code metadata]
+outputs: [Experiment proposal with protocol lock and READY candidate]
+tools: [research_artifact_read, research_artifact_query, resource_metadata, resource_write, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Define operationalization, baselines, data splits, metrics, seeds, ablations, stress tests, statistics, and exclusions.
+  - Audit the pinned ContextBundle for prior outcome evidence; if any is visible, label the protocol post-hoc or retrospective, enumerate the visible evidence, and forbid outcome-blind or confirmatory language.
+  - Define SUPPORTED, CONTRADICTED, and INCONCLUSIVE rules before viewing outcomes only for a genuinely prospective protocol; otherwise freeze successor-local rules without claiming prospective status.
+  - Materialize synthetic or inline datasets as immutable resources and pin each returned URI and SHA-256 before READY.
+  - Compile every generated argv against the pinned entrypoint parser/source, preserving exact option names and list tokenization; fail PROTOCOL_GAP rather than inventing flags.
+  - Pin Claim, code, data, configuration, environment, and protocol hash only after locked fields are final; on mismatch use the validator-reported expected hash for the exact candidate.
+completion_conditions: [Outcome rules are unambiguous, Required resources and versions are pinned, Visibility boundary is truthful and post-hoc protocols disclaim confirmatory inference]
+failure_classes: [PROTOCOL_GAP, BASELINE_UNAVAILABLE, DATASET_UNAVAILABLE, METRIC_AMBIGUOUS, COMPUTE_INFEASIBLE]
+non_goals: [Executing experiments, Post-hoc threshold selection, Interpreting results]
+forbidden_behaviors: [Inspecting outcome data before a protocol advertised as prospective, Describing a post-hoc successor as outcome-blind or confirmatory, Defining outcome rules after execution, Giving the proposed method an unfair tuning budget]
+permissions: {profile: producer, sandbox: read-only, operations: [READ, QUERY, VALIDATE, CREATE, REVISE], artifact_kinds: [Experiment], field_policy: Full protocol fields only before READY, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, protocol_sha256, visible_data_boundary]

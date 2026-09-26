@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/action.schema.json",
+  "title": "Compiled Research Action v0.1",
+  "type": "object",
+  "required": ["action_version", "project_id", "run_id", "action_id", "state", "controller_only", "skill", "preset", "target_output_id", "target_ref", "input_git_commit", "required_input_refs", "allowed_outputs", "allowed_tools", "field_permissions", "working_directory_policy", "completion_contract", "model_routing"],
+  "properties": {
+    "action_version": {"const": "research-action/v0.1"},
+    "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "action_id": {"type": "string", "minLength": 1},
+    "state": {"type": "string", "minLength": 1},
+    "controller_only": {"const": false},
+    "track": {"type": ["string", "null"]},
+    "skill": {"type": "string", "minLength": 1},
+    "preset": {"type": "string", "minLength": 1},
+    "target_output_id": {"type": ["string", "null"]},
+    "target_ref": {"type": ["object", "null"]},
+    "input_git_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "required_input_refs": {"type": "array", "items": {"type": "object"}},
+    "allowed_outputs": {"type": "object"},
+    "allowed_tools": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "field_permissions": {"type": "array", "items": {"type": "object"}},
+    "working_directory_policy": {"enum": ["READ_ONLY", "ACTION_SCRATCH", "PROJECT_PAPER"]},
+    "model_routing": {
+      "type": "object",
+      "required": ["scientific_risk", "difficulty", "uncertainty", "reason"],
+      "properties": {
+        "scientific_risk": {"enum": ["LOW", "MEDIUM", "HIGH"]},
+        "difficulty": {"enum": ["LOW", "MEDIUM", "HIGH"]},
+        "uncertainty": {"enum": ["LOW", "MEDIUM", "HIGH"]},
+        "reason": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "completion_contract": {
+      "type": "object",
+      "required": ["conditions", "failure_classes", "forbidden_behaviors"],
+      "properties": {
+        "conditions": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "failure_classes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "forbidden_behaviors": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

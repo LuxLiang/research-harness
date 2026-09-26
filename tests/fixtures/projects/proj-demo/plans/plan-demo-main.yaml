@@ -1,0 +1,95 @@
+schema_version: research-artifact/v0.1.2
+kind: ResearchPlan
+id: plan-demo-main
+project_id: proj-demo
+title: Demonstration Research Plan
+status: APPROVED
+revision: 1
+created_at: "2026-08-21T00:00:00Z"
+updated_at: "2026-08-21T00:00:00Z"
+provenance:
+  created_by: {actor_type: agent, actor_id: planner-demo, session_id: session-demo-001}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [demo-plan]
+question_refs:
+  - {id: rq-demo-correction, kind: ResearchQuestion}
+strategy: Combine literature analysis, a formal recoverability claim, a reproducibility test, and exact-revision review.
+work_packages:
+  - id: literature
+    title: Assess related artifact-contract work
+    track: LITERATURE
+    objective: Establish the baseline and novelty boundary.
+    input_refs:
+      - {id: rq-demo-correction, kind: ResearchQuestion}
+    depends_on: []
+    planned_outputs:
+      - local_id: literature-contract-analysis
+        kind: LiteratureEvidence
+        description: Analyze related artifact-contract work.
+        required: true
+        depends_on_outputs: []
+    materialized_outputs:
+      - local_id: literature-contract-analysis
+        artifact_ref: {id: lit-demo-example-2026-contracts, kind: LiteratureEvidence, revision: 1}
+    success_criteria: [At least one assessed source with a stated novelty impact.]
+    status: DONE
+  - id: theory
+    title: Formalize recoverability
+    track: THEORY
+    objective: State the durable-state claim and its assumptions.
+    input_refs:
+      - {id: lit-demo-example-2026-contracts, kind: LiteratureEvidence}
+    depends_on: [literature]
+    planned_outputs:
+      - local_id: theory-recoverable-state
+        kind: ScientificClaim
+        verification_profile: ADVERSARIAL
+        description: Formalize artifact-state recoverability and its assumptions.
+        required: true
+        depends_on_outputs: [literature-contract-analysis]
+    materialized_outputs:
+      - local_id: theory-recoverable-state
+        artifact_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+    success_criteria: [The claim has explicit evidence and verification.]
+    status: DONE
+  - id: experiment
+    title: Run state-recovery check
+    track: EXPERIMENT
+    objective: Reconstruct the project from artifacts without session history.
+    input_refs:
+      - {id: claim-demo-recoverable-state, kind: ScientificClaim}
+    depends_on: [theory]
+    planned_outputs:
+      - local_id: experiment-state-recovery
+        kind: Experiment
+        description: Test reconstruction from artifacts without session history.
+        required: true
+        depends_on_outputs: [theory-recoverable-state]
+    materialized_outputs:
+      - local_id: experiment-state-recovery
+        artifact_ref: {id: exp-demo-state-recovery, kind: Experiment, revision: 1}
+    success_criteria: [All required research objects are recovered.]
+    status: DONE
+  - id: review
+    title: Review the recoverability claim
+    track: REVIEW
+    objective: Check the exact claim revision for overstatement.
+    input_refs:
+      - {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+    depends_on: [theory, experiment]
+    planned_outputs:
+      - local_id: review-recoverable-state
+        kind: Review
+        description: Review the exact recoverability claim revision.
+        required: true
+        depends_on_outputs: [theory-recoverable-state, experiment-state-recovery]
+    materialized_outputs:
+      - local_id: review-recoverable-state
+        artifact_ref: {id: review-demo-claim-001, kind: Review, revision: 1}
+    success_criteria: [No unresolved blocker remains.]
+    status: DONE
+milestones:
+  - id: evidence-complete
+    description: Literature, claim, experiment, and review artifacts are linked.
+    acceptance_criteria: [The workspace validates without errors.]
+    status: MET

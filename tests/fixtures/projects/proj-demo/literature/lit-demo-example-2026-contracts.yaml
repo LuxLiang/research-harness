@@ -1,0 +1,42 @@
+schema_version: research-artifact/v0.1.2
+kind: LiteratureEvidence
+id: lit-demo-example-2026-contracts
+project_id: proj-demo
+title: Example analysis of artifact-driven research workflows
+status: VERIFIED
+revision: 1
+created_at: "2026-08-21T00:00:00Z"
+updated_at: "2026-08-21T00:00:00Z"
+provenance:
+  created_by: {actor_type: agent, actor_id: literature-demo, session_id: session-demo-002}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [literature, workflow]
+paper:
+  title: Example Artifact Contracts for Research Workflows
+  authors:
+    - {name: Example Author}
+  year: 2026
+  venue: Demonstration Archive
+  identifiers:
+    url: https://example.org/artifact-contracts
+  version: v1
+relations:
+  - target_ref: {id: rq-demo-correction, kind: ResearchQuestion}
+    type: BASELINE
+    explanation: The work establishes file-based handoffs but does not model claim verification.
+  - target_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim}
+    type: EXTENSION
+    explanation: The current claim adds typed references and lifecycle validation.
+main_results:
+  - statement: Structured intermediate files improve resumability of staged research workflows.
+    locator: Section 3
+differences:
+  - dimension: Evidence model
+    cited_work: Outputs are stage-level documents.
+    current_research: Claims, experiments, reviews, and decisions have typed cross-references.
+novelty_impact:
+  assessment: NARROWS
+  rationale: File-based persistence is known; the contribution must focus on scientific semantics and validation.
+confidence:
+  score: 0.85
+  rationale: The source was read directly, but this is a demonstration record rather than a real novelty claim.

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/v0.1.2/common.schema.json",
+  "title": "Research Artifact common definitions v0.1.2",
+  "$defs": {
+    "kind": {
+      "enum": [
+        "Project",
+        "ResearchQuestion",
+        "ResearchPlan",
+        "LiteratureEvidence",
+        "ScientificClaim",
+        "Experiment",
+        "Review",
+        "Decision"
+      ]
+    },
+    "artifact_id": {
+      "type": "string",
+      "pattern": "^(proj|rq|plan|lit|claim|exp|review|decision)-[a-z0-9][a-z0-9-]*$"
+    },
+    "actor_ref": {
+      "type": "object",
+      "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {"enum": ["human", "agent"]},
+        "actor_id": {"type": "string", "minLength": 1},
+        "session_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "artifact_ref": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {"$ref": "#/$defs/artifact_id"},
+        "kind": {"$ref": "#/$defs/kind"},
+        "revision": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "resource_ref": {
+      "type": "object",
+      "required": ["uri", "description"],
+      "properties": {
+        "uri": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "media_type": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["created_by", "updated_by"],
+      "properties": {
+        "created_by": {"$ref": "#/$defs/actor_ref"},
+        "updated_by": {"$ref": "#/$defs/actor_ref"}
+      },
+      "additionalProperties": false
+    },
+    "envelope": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "kind",
+        "id",
+        "title",
+        "status",
+        "revision",
+        "created_at",
+        "updated_at",
+        "provenance",
+        "tags"
+      ],
+      "properties": {
+        "schema_version": {"const": "research-artifact/v0.1.2"},
+        "kind": {"$ref": "#/$defs/kind"},
+        "id": {"$ref": "#/$defs/artifact_id"},
+        "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+        "title": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "minLength": 1},
+        "revision": {"type": "integer", "minimum": 1},
+        "created_at": {"type": "string", "format": "date-time"},
+        "updated_at": {"type": "string", "format": "date-time"},
+        "provenance": {"$ref": "#/$defs/provenance"},
+        "tags": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

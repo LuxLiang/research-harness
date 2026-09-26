@@ -1,0 +1,16 @@
+id: experiment-verification
+purpose: Independently audit Experiment fidelity, statistics, fairness, and reproducibility.
+trigger_states: [EXECUTION_TRACKS_EXPERIMENT_ASSESS]
+inputs: [Frozen Experiment revision, Raw outputs, Pinned code data and configuration, Plan success criteria]
+outputs: [Revision-pinned EXPERIMENT Review with supported contradicted or inconclusive assessment]
+tools: [research_artifact_read, research_artifact_resolve, resource_read, bash, filesystem, metric_recompute, research_artifact_propose, research_action_submit]
+procedure:
+  - Check protocol fidelity and independently recompute primary metrics.
+  - Audit seeds, variance, statistics, baseline fairness, leakage, ablations, and selective reporting.
+  - Preserve negative results and classify only by preregistered outcome rules.
+completion_conditions: [Outcome is SUPPORTED CONTRADICTED or INCONCLUSIVE, Every finding traces to raw resources, Reproduction attempts are recorded]
+failure_classes: [REPRODUCIBILITY_FAILURE, STATISTICAL_INSUFFICIENCY, DATA_LEAKAGE, BASELINE_UNFAIRNESS, SELECTIVE_REPORTING, PROTOCOL_DEVIATION]
+non_goals: [Modifying Experiment, Discarding contradictions, Post-hoc outcome rules]
+forbidden_behaviors: [Modifying the reviewed Experiment, Using post-hoc metrics thresholds or exclusions, Hiding failed negative or contradictory results]
+permissions: {profile: experiment-reviewer, sandbox: run-write, operations: [READ, QUERY, CREATE, RESOURCE_WRITE, RUN], artifact_kinds: [Review], field_policy: Create Review and audit resources only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, target_revision, reproduction_run_ids, recomputation_hashes, independent_session]

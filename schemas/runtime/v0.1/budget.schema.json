@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/budget.schema.json",
+  "type": "object",
+  "required": ["budget_version", "project_id", "run_id", "allowance_basis", "approved_budget_percent", "used_percent", "reserved_percent", "estimated_remaining_percent", "verification_reserve_percent", "verification_reserve_remaining_percent", "status", "approvals", "entries", "pending_request", "warnings", "created_at", "updated_at"],
+  "properties": {
+    "budget_version": {"const": "research-budget/v0.1"},
+    "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+    "run_id": {"type": "string", "minLength": 1},
+    "allowance_basis": {"const": "USER_RELATIVE_PERCENT"},
+    "approved_budget_percent": {"type": "number", "exclusiveMinimum": 0, "maximum": 100},
+    "used_percent": {"type": "number", "minimum": 0},
+    "reserved_percent": {"type": "number", "minimum": 0},
+    "estimated_remaining_percent": {"type": "number", "minimum": 0},
+    "verification_reserve_percent": {"type": "number", "minimum": 0},
+    "verification_reserve_remaining_percent": {"type": "number", "minimum": 0},
+    "status": {"enum": ["ACTIVE", "WAITING_HUMAN_BUDGET", "CLOSED"]},
+    "approvals": {"type": "array", "minItems": 1, "items": {"type": "object"}},
+    "entries": {"type": "array", "items": {"type": "object"}},
+    "pending_request": {"type": ["object", "null"]},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string"},
+    "updated_at": {"type": "string"}
+  },
+  "additionalProperties": false
+}

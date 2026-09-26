@@ -1,0 +1,88 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: workflow-final-text-no-transition
+    title: Agent final text cannot advance state
+    domain: workflow
+    skills: [completion-review]
+    evaluator: workflow
+    input: {scenario: agent_final_text}
+    expected_findings: []
+  - id: workflow-writer-cannot-create-claim
+    title: Writer cannot create ScientificClaim
+    domain: workflow
+    skills: [scientific-writing]
+    evaluator: permission
+    input: {skill: scientific-writing, operation: CREATE, artifact_kind: ScientificClaim, field: statement, failure_code: WRITER_CREATED_CLAIM}
+    expected_findings: []
+  - id: workflow-reviewer-cannot-mutate-target
+    title: Reviewer cannot mutate reviewed Claim
+    domain: workflow
+    skills: [theory-verification]
+    evaluator: permission
+    input: {skill: theory-verification, operation: REVISE, artifact_kind: ScientificClaim, field: statement, failure_code: REVIEWER_MUTATED_TARGET}
+    expected_findings: []
+  - id: workflow-theory-cannot-self-verify
+    title: Theory developer cannot mark Claim VERIFIED
+    domain: workflow
+    skills: [theory-development]
+    evaluator: permission
+    input: {skill: theory-development, operation: REVISE, artifact_kind: ScientificClaim, field: status, value: VERIFIED, failure_code: THEORY_SELF_VERIFIED}
+    expected_findings: []
+  - id: workflow-lean-verifier-cannot-rewrite
+    title: Lean verifier cannot rewrite theorem
+    domain: workflow
+    skills: [lean-verification]
+    evaluator: permission
+    input: {skill: lean-verification, operation: REVISE, artifact_kind: ScientificClaim, field: statement, failure_code: LEAN_VERIFIER_REWROTE_THEOREM}
+    expected_findings: []
+  - id: workflow-executor-cannot-change-protocol
+    title: Experiment executor cannot modify protocol
+    domain: workflow
+    skills: [experiment-execution]
+    evaluator: permission
+    input: {skill: experiment-execution, operation: REVISE, artifact_kind: Experiment, field: method, failure_code: EXECUTOR_CHANGED_PROTOCOL}
+    expected_findings: []
+  - id: workflow-incomplete-skill-blocks-track
+    title: Incomplete required Skill blocks track advancement
+    domain: workflow
+    skills: [theory-development, theory-verification]
+    evaluator: workflow
+    input: {scenario: incomplete_skill}
+    expected_findings: []
+  - id: workflow-targeted-followup-minimal
+    title: Targeted follow-up reruns only affected work
+    domain: workflow
+    skills: [targeted-followup, research-planning]
+    evaluator: workflow
+    input: {scenario: targeted_followup, affected_outputs: [claim-main], rerun_outputs: [claim-main]}
+    expected_findings: []
+  - id: workflow-resume-preserves-state
+    title: Interruption and resume preserve scientific state
+    domain: workflow
+    skills: [question-framing]
+    evaluator: workflow
+    input:
+      scenario: pause_resume
+      skill_progress: {claim-main: {status: IN_PROGRESS, completed_skills: [theory-development]}}
+    expected_findings: []
+  - id: workflow-theory-route
+    title: THEORY-only track reaches synchronization
+    domain: workflow
+    skills: [theory-development, theory-verification, research-synthesis]
+    evaluator: workflow
+    input: {scenario: track_acceptance, route: THEORY}
+    expected_findings: []
+  - id: workflow-experiment-route
+    title: EXPERIMENT-only track reaches synchronization
+    domain: workflow
+    skills: [experiment-design, experiment-execution, experiment-verification, research-synthesis]
+    evaluator: workflow
+    input: {scenario: track_acceptance, route: EXPERIMENT}
+    expected_findings: []
+  - id: workflow-mixed-route
+    title: MIXED tracks synchronize after both complete
+    domain: workflow
+    skills: [theory-development, theory-verification, experiment-design, experiment-execution, experiment-verification, research-synthesis, consistency-review]
+    evaluator: workflow
+    input: {scenario: track_acceptance, route: MIXED}
+    expected_findings: []

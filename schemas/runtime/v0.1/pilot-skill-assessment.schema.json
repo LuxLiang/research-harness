@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/pilot-skill-assessment.schema.json",
+  "title": "Golden-pilot Skill assessment",
+  "type": "object",
+  "required": ["skill_id", "verdict", "summary", "findings"],
+  "properties": {
+    "skill_id": {"type": "string", "minLength": 1},
+    "verdict": {"enum": ["PASS", "FAIL", "INCONCLUSIVE"]},
+    "summary": {"type": "string", "minLength": 1},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "code", "message", "evidence"],
+        "properties": {
+          "severity": {"enum": ["S0", "S1", "S2", "S3", "S4"]},
+          "code": {"type": "string", "minLength": 1},
+          "message": {"type": "string", "minLength": 1},
+          "evidence": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

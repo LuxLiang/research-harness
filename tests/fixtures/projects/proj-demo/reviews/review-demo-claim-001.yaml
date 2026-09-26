@@ -1,0 +1,45 @@
+schema_version: research-artifact/v0.1.2
+kind: Review
+id: review-demo-claim-001
+project_id: proj-demo
+title: Review of artifact-state recoverability claim
+status: RESOLVED
+revision: 1
+created_at: "2026-08-21T02:00:00Z"
+updated_at: "2026-08-21T03:00:00Z"
+provenance:
+  created_by: {actor_type: agent, actor_id: reviewer-demo, session_id: session-demo-005}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [review, claim]
+target:
+  artifact_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+  git_commit: "abcdef0123456789abcdef0123456789abcdef01"
+reviewer:
+  actor: {actor_type: agent, actor_id: reviewer-demo, session_id: session-demo-005}
+  reviewer_type: ADVERSARIAL
+summary: The claim is acceptable once its resource-availability assumption is explicit.
+assessment:
+  scheme: THEORY
+  outcome: PASS
+  items:
+    - subject: claim-demo-recoverable-state
+      outcome: PASS
+      confidence: 0.95
+      evidence_refs:
+        - {id: exp-demo-state-recovery, kind: Experiment, revision: 1}
+evidence_resources: []
+issues:
+  - id: assumption-availability
+    title: Persistence depends on referenced resources
+    description: Artifact validity alone cannot recover resources that have disappeared.
+    severity: MAJOR
+    status: RESOLVED
+    evidence_refs:
+      - {id: exp-demo-state-recovery, kind: Experiment}
+    resolution:
+      note: Added the repository-available assumption to the reviewed claim.
+      resolved_in_revision: 1
+      resolved_by: {actor_type: human, actor_id: demo-researcher}
+      resolved_at: "2026-08-21T03:00:00Z"
+recommendation: ACCEPT
+resolution_summary: The required availability assumption is now explicit.

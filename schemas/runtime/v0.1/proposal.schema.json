@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/proposal.schema.json",
+  "title": "Staged research artifact proposal v0.1",
+  "type": "object",
+  "required": [
+    "proposal_version", "proposal_id", "project_id", "action_id", "operation",
+    "artifact_id", "kind", "base_revision", "bundle_sha256",
+    "proposer_session_id", "candidate", "proposal_sha256"
+  ],
+  "properties": {
+    "proposal_version": {"const": "research-proposal/v0.1"},
+    "proposal_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+    "action_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "operation": {"enum": ["CREATE", "REVISE"]},
+    "artifact_id": {"type": "string", "minLength": 1},
+    "kind": {
+      "enum": ["Project", "ResearchQuestion", "ResearchPlan", "LiteratureEvidence", "ScientificClaim", "Experiment", "Review", "Decision", "ResearchProposal"]
+    },
+    "base_revision": {"type": ["integer", "null"], "minimum": 1},
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "proposer_session_id": {"type": "string", "minLength": 1},
+    "candidate": {"type": "object"},
+    "proposal_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "additionalProperties": false
+}

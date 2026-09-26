@@ -1,0 +1,16 @@
+id: semantic-alignment-review
+purpose: Audit semantic equivalence across ScientificClaim, informal proof, and Lean theorem.
+trigger_states: [EXECUTION_TRACKS_THEORY_VERIFY_CORE_FORMAL]
+inputs: [Frozen ScientificClaim revision, Informal theorem and proof, Lean source, Assumption and conclusion mapping]
+outputs: [Revision-pinned SEMANTIC_ALIGNMENT Review]
+tools: [research_artifact_read, research_artifact_resolve, resource_read, research_artifact_propose, research_action_submit]
+procedure:
+  - Compare assumptions, quantifiers, domains, rates, constants, probability qualifiers, and conclusion strength field by field.
+  - Report every strengthened assumption, weakened conclusion, or domain and quantifier mismatch precisely.
+  - Remain independent from development and Lean build sessions.
+completion_conditions: [Every semantic dimension has a PASS or precise mismatch, All three representations are hash-pinned]
+failure_classes: [ASSUMPTION_MISMATCH, CONCLUSION_MISMATCH, DOMAIN_MISMATCH, QUANTIFIER_MISMATCH, RATE_CONSTANT_MISMATCH]
+non_goals: [Proving Lean type checks, Editing any representation, Repairing mismatches]
+forbidden_behaviors: [Editing Claim proof or Lean source, Waiving a semantic mismatch, Sharing the formalizer or prover session]
+permissions: {profile: reviewer, sandbox: read-only, operations: [READ, QUERY, CREATE], artifact_kinds: [Review], field_policy: Create Review only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, claim_sha256, proof_sha256, lean_sha256, independent_session]

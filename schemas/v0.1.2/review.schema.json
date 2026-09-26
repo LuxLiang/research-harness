@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/v0.1.2/review.schema.json",
+  "title": "Review Artifact v0.1.2",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "type": "object",
+      "required": ["project_id", "target", "reviewer", "summary", "issues", "recommendation"],
+      "properties": {
+        "kind": {"const": "Review"},
+        "id": {"type": "string", "pattern": "^review-[a-z0-9][a-z0-9-]*$"},
+        "status": {"enum": ["OPEN", "IN_RESOLUTION", "RESOLVED", "WAIVED"]},
+        "target": {
+          "type": "object",
+          "required": ["artifact_ref", "git_commit"],
+          "properties": {
+            "artifact_ref": {"allOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"required": ["revision"]}]},
+            "git_commit": {"type": "string", "pattern": "^[0-9a-fA-F]{7,64}$"}
+          },
+          "additionalProperties": false
+        },
+        "reviewer": {
+          "type": "object",
+          "required": ["actor", "reviewer_type"],
+          "properties": {
+            "actor": {"$ref": "common.schema.json#/$defs/actor_ref"},
+            "reviewer_type": {"enum": ["PEER", "ADVERSARIAL", "THEORY", "METHODOLOGY", "LITERATURE", "REPRODUCIBILITY", "EDITORIAL", "FORMALIZATION", "LEAN", "AXIOM_AUDIT", "SEMANTIC_ALIGNMENT", "EXPERIMENT", "COMPLETION", "CONSISTENCY", "FINAL"]}
+          },
+          "additionalProperties": false
+        },
+        "summary": {"type": "string", "minLength": 1},
+        "assessment": {
+          "type": "object",
+          "required": ["scheme", "outcome", "items"],
+          "properties": {
+            "scheme": {"enum": ["NOVELTY", "THEORY", "LEAN", "AXIOM_AUDIT", "SEMANTIC_ALIGNMENT", "EXPERIMENT", "COMPLETION", "CONSISTENCY", "FINAL"]},
+            "outcome": {"enum": ["OPEN", "PARTIAL", "KNOWN", "EQUIVALENT_KNOWN", "UNCERTAIN", "PASS", "PROOF_GAP", "ASSUMPTION_GAP", "FALSE_CLAIM", "RETHINK_CLAIM", "RETHINK_PLAN", "RETHINK_QUESTION", "LEAN_PROOF_GAP", "LIBRARY_GAP", "FORMALIZATION_GAP", "MATHEMATICAL_FAILURE", "UNAPPROVED_AXIOM", "SORRY_FOUND", "MISMATCH", "SUPPORTED", "CONTRADICTED", "INCONCLUSIVE", "COMPLETE", "INCOMPLETE", "TARGETED_FOLLOWUP", "EDITORIAL_REVISION"]},
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["subject", "outcome", "evidence_refs"],
+                "properties": {
+                  "subject": {"type": "string", "minLength": 1},
+                  "outcome": {"type": "string", "minLength": 1},
+                  "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                  "evidence_refs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/artifact_ref"}}
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "evidence_resources": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/resource_ref"}},
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "description", "severity", "status", "evidence_refs"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+              "title": {"type": "string", "minLength": 1},
+              "description": {"type": "string", "minLength": 1},
+              "severity": {"enum": ["BLOCKER", "MAJOR", "MINOR", "SUGGESTION"]},
+              "status": {"enum": ["OPEN", "ACCEPTED", "RESOLVED", "WONT_FIX"]},
+              "evidence_refs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/artifact_ref"}},
+              "resolution": {
+                "type": "object",
+                "required": ["note", "resolved_in_revision"],
+                "properties": {
+                  "note": {"type": "string", "minLength": 1},
+                  "resolved_in_revision": {"type": ["integer", "null"], "minimum": 1},
+                  "decision_ref": {"allOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"properties": {"kind": {"const": "Decision"}}}]},
+                  "resolved_by": {"$ref": "common.schema.json#/$defs/actor_ref"},
+                  "resolved_at": {"type": "string", "format": "date-time"}
+                },
+                "additionalProperties": false
+              }
+            },
+            "allOf": [
+              {
+                "if": {"properties": {"status": {"enum": ["RESOLVED", "WONT_FIX"]}}},
+                "then": {"required": ["resolution"]}
+              }
+            ],
+            "additionalProperties": false
+          }
+        },
+        "recommendation": {"enum": ["ACCEPT", "MINOR_REVISION", "MAJOR_REVISION", "REJECT"]},
+        "resolution_summary": {"type": "string", "minLength": 1}
+      },
+      "if": {"properties": {"status": {"enum": ["RESOLVED", "WAIVED"]}}},
+      "then": {"required": ["resolution_summary"]}
+    }
+  ],
+  "unevaluatedProperties": false
+}

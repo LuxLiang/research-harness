@@ -1,0 +1,35 @@
+schema_version: research-artifact/v0.1.2
+kind: ResearchQuestion
+id: rq-demo-correction
+project_id: proj-demo
+title: Can structured artifacts improve research traceability?
+status: ACTIVE
+revision: 1
+created_at: "2026-08-21T00:00:00Z"
+updated_at: "2026-08-21T00:00:00Z"
+provenance:
+  created_by: {actor_type: human, actor_id: demo-researcher}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [traceability]
+problem_definition: Determine whether structured, versioned research artifacts preserve scientific decisions and evidence better than chat-only coordination.
+background: Long-running research agents lose durable context when conclusions exist only in session history.
+scope:
+  included: [artifact schemas, evidence links, reproducible experiment manifests]
+  excluded: [new agent runtime, model training]
+known_results:
+  - statement: Artifact contracts can provide persistent handoffs between workflow stages.
+    evidence_refs:
+      - {id: lit-demo-example-2026-contracts, kind: LiteratureEvidence}
+research_gap: A compact artifact contract combining claims, experiments, review, and decisions is not yet established for this workspace.
+hypotheses:
+  - statement: Referentially validated artifacts make the research state recoverable without chat history.
+    claim_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim}
+expected_contributions:
+  - A minimal version-controlled artifact schema.
+  - Explicit lifecycle and review semantics.
+risks:
+  - category: THEORY
+    description: Structural validation may be confused with scientific correctness.
+    likelihood: MEDIUM
+    impact: HIGH
+    mitigation: Keep schema gates structural and require explicit scientific review.

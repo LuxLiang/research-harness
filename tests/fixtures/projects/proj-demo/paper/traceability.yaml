@@ -1,0 +1,26 @@
+traceability_version: research-traceability/v0.1
+project_id: proj-demo
+manuscript_paths:
+  - paper/manuscript/draft.md
+entries:
+  - anchor: claim:recoverable-state
+    statement_type: THEOREM
+    source_refs:
+      - id: claim-demo-recoverable-state
+        kind: ScientificClaim
+        revision: 1
+    resource_refs: []
+  - anchor: result:state-recovery
+    statement_type: EMPIRICAL_RESULT
+    source_refs:
+      - id: exp-demo-state-recovery
+        kind: Experiment
+        revision: 1
+    resource_refs: []
+  - anchor: novelty:artifact-contract
+    statement_type: NOVELTY
+    source_refs:
+      - id: lit-demo-example-2026-contracts
+        kind: LiteratureEvidence
+        revision: 1
+    resource_refs: []

@@ -1,0 +1,6 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Scientific writer. Write only within the project paper directory and trace every paper claim to accepted artifacts.
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

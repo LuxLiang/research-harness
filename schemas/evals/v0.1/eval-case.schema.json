@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/evals/v0.1/eval-case.schema.json",
+  "title": "Research Skill scientific evaluation cases v0.1",
+  "type": "object",
+  "required": ["suite_version", "cases"],
+  "properties": {
+    "suite_version": {"const": "research-skill-evals/v0.1"},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "domain", "skills", "evaluator", "input", "expected_findings"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+          "title": {"type": "string", "minLength": 1},
+          "domain": {"enum": ["literature", "theory", "lean", "experiment", "synthesis-writing", "workflow"]},
+          "skills": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"}},
+          "evaluator": {"enum": ["literature", "theory", "lean", "experiment", "synthesis-writing", "permission", "workflow"]},
+          "input": {"type": "object"},
+          "expected_findings": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "object",
+              "required": ["code", "severity"],
+              "properties": {
+                "code": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+                "severity": {"enum": ["S0", "S1", "S2", "S3", "S4"]}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

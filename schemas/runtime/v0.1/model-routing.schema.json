@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/model-routing.schema.json",
+  "type": "object",
+  "required": ["routing_version", "tier_order", "tier_aliases", "tier_reasoning", "verification_reserve_fraction", "cost_estimates_percent", "skills"],
+  "properties": {
+    "routing_version": {"const": "research-model-routing/v0.1"},
+    "tier_order": {"const": ["economy", "balanced", "frontier"]},
+    "tier_aliases": {"$ref": "#/$defs/tierMapString"},
+    "tier_reasoning": {"$ref": "#/$defs/tierMapString"},
+    "verification_reserve_fraction": {"type": "number", "minimum": 0, "exclusiveMaximum": 1},
+    "cost_estimates_percent": {
+      "type": "object",
+      "required": ["economy", "balanced", "frontier"],
+      "additionalProperties": false,
+      "properties": {
+        "economy": {"$ref": "#/$defs/effortCosts"},
+        "balanced": {"$ref": "#/$defs/effortCosts"},
+        "frontier": {"$ref": "#/$defs/effortCosts"}
+      }
+    },
+    "skills": {
+      "type": "object", "minProperties": 17,
+      "additionalProperties": {
+        "type": "object",
+        "required": ["quality_floor", "default_tier", "reasoning_effort"],
+        "properties": {
+          "quality_floor": {"enum": ["economy", "balanced", "frontier"]},
+          "default_tier": {"enum": ["economy", "balanced", "frontier"]},
+          "reasoning_effort": {"enum": ["low", "medium", "high"]},
+          "critical_verification": {"type": "boolean"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "tierMapString": {
+      "type": "object", "required": ["economy", "balanced", "frontier"],
+      "properties": {"economy": {"type": "string"}, "balanced": {"type": "string"}, "frontier": {"type": "string"}},
+      "additionalProperties": false
+    },
+    "effortCosts": {
+      "type": "object", "required": ["low", "medium", "high"],
+      "properties": {"low": {"type": "number", "exclusiveMinimum": 0}, "medium": {"type": "number", "exclusiveMinimum": 0}, "high": {"type": "number", "exclusiveMinimum": 0}},
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

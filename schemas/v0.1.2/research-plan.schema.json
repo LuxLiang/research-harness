@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/v0.1.2/research-plan.schema.json",
+  "title": "Research Plan Artifact v0.1.2",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "type": "object",
+      "required": ["project_id", "question_refs", "strategy", "work_packages", "milestones"],
+      "properties": {
+        "kind": {"const": "ResearchPlan"},
+        "id": {"type": "string", "pattern": "^plan-[a-z0-9][a-z0-9-]*$"},
+        "status": {"enum": ["DRAFT", "APPROVED", "IN_PROGRESS", "BLOCKED", "COMPLETED", "SUPERSEDED"]},
+        "question_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"allOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"properties": {"kind": {"const": "ResearchQuestion"}}}]}
+        },
+        "strategy": {"type": "string", "minLength": 1},
+        "work_packages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "track", "objective", "input_refs", "depends_on", "planned_outputs", "materialized_outputs", "success_criteria", "status"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+              "title": {"type": "string", "minLength": 1},
+              "track": {"enum": ["LITERATURE", "THEORY", "EXPERIMENT", "REVIEW", "WRITING"]},
+              "objective": {"type": "string", "minLength": 1},
+              "input_refs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/artifact_ref"}},
+              "depends_on": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+              "planned_outputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["local_id", "kind", "description", "required", "depends_on_outputs"],
+                  "properties": {
+                    "local_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+                    "kind": {"enum": ["LiteratureEvidence", "ScientificClaim", "Experiment", "Review", "Decision"]},
+                    "description": {"type": "string", "minLength": 1},
+                    "required": {"type": "boolean"},
+                    "verification_profile": {"enum": ["ADVERSARIAL", "CORE_FORMAL", "EMPIRICAL"]},
+                    "depends_on_outputs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+                  },
+                  "allOf": [
+                    {
+                      "if": {"properties": {"kind": {"const": "ScientificClaim"}}},
+                      "then": {"required": ["verification_profile"]},
+                      "else": {"not": {"required": ["verification_profile"]}}
+                    }
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "materialized_outputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["local_id", "artifact_ref"],
+                  "properties": {
+                    "local_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+                    "artifact_ref": {"$ref": "common.schema.json#/$defs/artifact_ref"}
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "success_criteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+              "status": {"enum": ["TODO", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED"]}
+            },
+            "additionalProperties": false
+          }
+        },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "description", "acceptance_criteria", "status"],
+            "properties": {
+              "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+              "description": {"type": "string", "minLength": 1},
+              "acceptance_criteria": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+              "status": {"enum": ["PENDING", "MET", "MISSED", "WAIVED"]}
+            },
+            "additionalProperties": false
+          }
+        },
+        "superseded_by": {"allOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"properties": {"kind": {"const": "ResearchPlan"}}}]}
+      },
+      "if": {"properties": {"status": {"const": "SUPERSEDED"}}},
+      "then": {"required": ["superseded_by"]}
+    }
+  ],
+  "unevaluatedProperties": false
+}

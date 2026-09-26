@@ -1,0 +1,14 @@
+include README.md VERSION AGENTS.md CONTRIBUTING.md
+recursive-include schemas *.json *.md
+recursive-include config *.yaml
+recursive-include evals *.yaml *.json *.md
+recursive-include integrations/deepseek-harness/skills *.yaml *.json *.md
+recursive-include integrations/deepseek-harness/presets *.yaml *.yml *.json *.md
+recursive-include integrations/deepseek-harness/src *.ts
+include integrations/deepseek-harness/*.json
+include integrations/deepseek-harness/*.yml
+include integrations/deepseek-harness/README.md
+recursive-include docs *.md
+include scripts/*.py scripts/*.sh scripts/research-cordis
+recursive-include tests *.py *.yaml *.md
+global-exclude __pycache__ *.py[cod]

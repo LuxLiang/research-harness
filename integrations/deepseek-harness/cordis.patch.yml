@@ -1,0 +1,13 @@
+# Profile bundle for the model-backed Research Harness controller.
+# Override values with the documented RESEARCH_HARNESS_* environment variables.
+- insert:
+    - id: research-runtime
+      name: '@research-harness/deepseek-integration'
+      config:
+        workspace: !!js process.env.RESEARCH_HARNESS_WORKSPACE ?? process.cwd()
+        python: !!js process.env.RESEARCH_HARNESS_PYTHON ?? 'python3'
+        provider: !!js process.env.RESEARCH_HARNESS_PROVIDER ?? 'openai-codex'
+        push: !!js process.env.RESEARCH_HARNESS_PUSH === 'true'
+        pushAttempts: 3
+        sidecarTimeoutMs: 300000
+        operatorSocket: !!js process.env.RESEARCH_HARNESS_SOCKET ?? '.harness/research/cordis.sock'

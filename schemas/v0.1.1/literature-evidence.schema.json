@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/v0.1.1/literature-evidence.schema.json",
+  "title": "Literature Evidence Artifact v0.1.1",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "type": "object",
+      "required": ["project_id", "paper", "relations", "main_results", "differences", "novelty_impact", "confidence"],
+      "properties": {
+        "kind": {"const": "LiteratureEvidence"},
+        "id": {"type": "string", "pattern": "^lit-[a-z0-9][a-z0-9-]*$"},
+        "status": {"enum": ["CANDIDATE", "ASSESSED", "VERIFIED", "DISMISSED", "RETRACTED"]},
+        "paper": {
+          "type": "object",
+          "required": ["title", "authors", "year", "venue", "identifiers"],
+          "properties": {
+            "title": {"type": "string", "minLength": 1},
+            "authors": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {"type": "string", "minLength": 1},
+                  "orcid": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9X]{4}$"}
+                },
+                "additionalProperties": false
+              }
+            },
+            "year": {"type": "integer", "minimum": 1400, "maximum": 3000},
+            "venue": {"type": "string", "minLength": 1},
+            "identifiers": {
+              "type": "object",
+              "minProperties": 1,
+              "properties": {
+                "doi": {"type": "string", "minLength": 1},
+                "arxiv": {"type": "string", "minLength": 1},
+                "url": {"type": "string", "format": "uri"}
+              },
+              "additionalProperties": false
+            },
+            "version": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "relations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["target_ref", "type", "explanation"],
+            "properties": {
+              "target_ref": {
+                "allOf": [
+                  {"$ref": "common.schema.json#/$defs/artifact_ref"},
+                  {"properties": {"kind": {"enum": ["ResearchQuestion", "ScientificClaim"]}}}
+                ]
+              },
+              "type": {"enum": ["BASELINE", "EXTENSION", "CONTRADICTION", "EQUIVALENT"]},
+              "explanation": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "main_results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["statement", "locator"],
+            "properties": {
+              "statement": {"type": "string", "minLength": 1},
+              "locator": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "differences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "cited_work", "current_research"],
+            "properties": {
+              "dimension": {"type": "string", "minLength": 1},
+              "cited_work": {"type": "string", "minLength": 1},
+              "current_research": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "novelty_impact": {
+          "type": "object",
+          "required": ["assessment", "rationale"],
+          "properties": {
+            "assessment": {"enum": ["SUPPORTS", "NARROWS", "NEUTRAL", "UNDERMINES", "INVALIDATES"]},
+            "rationale": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "confidence": {
+          "type": "object",
+          "required": ["score", "rationale"],
+          "properties": {
+            "score": {"type": "number", "minimum": 0, "maximum": 1},
+            "rationale": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        },
+        "source_resource": {"$ref": "common.schema.json#/$defs/resource_ref"}
+      }
+    }
+  ],
+  "unevaluatedProperties": false
+}

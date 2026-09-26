@@ -1,0 +1,16 @@
+id: lean-formalization
+purpose: Faithfully map a frozen ScientificClaim and informal proof into Lean.
+trigger_states: [EXECUTION_TRACKS_THEORY_VERIFY_CORE_FORMAL]
+inputs: [Frozen ScientificClaim revision, Informal proof, Dependency Claims, Lean environment manifest]
+outputs: [Lean source resource, Assumption and conclusion mapping, Verification-resource-only Claim revision]
+tools: [research_artifact_read, research_artifact_resolve, resource_write, lean, lake, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Map assumptions, quantifiers, domains, constants, and conclusion bidirectionally before coding.
+  - Write a theorem that preserves the mapping without strengthening assumptions or weakening conclusions.
+  - Record every ambiguous or unavailable mapping instead of silently changing semantics.
+completion_conditions: [Lean theorem parses, Bidirectional mapping is complete, Source and mapping hashes are recorded]
+failure_classes: [FORMALIZATION_GAP, LIBRARY_GAP, AMBIGUOUS_CLAIM, SEMANTIC_CHANGE_REQUIRED]
+non_goals: [Changing Claim semantics, Declaring the proof verified, Hiding unmapped assumptions]
+forbidden_behaviors: [Strengthening assumptions or weakening conclusions, Inserting sorry sorryAx or custom axioms, Declaring the Lean proof verified]
+permissions: {profile: formal, sandbox: scratch-write, operations: [READ, QUERY, VALIDATE, REVISE, RESOURCE_WRITE, RUN], artifact_kinds: [ScientificClaim], field_policy: Verification protocol and resource refs only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, lean_version, mathlib_commit, source_sha256, mapping_sha256]

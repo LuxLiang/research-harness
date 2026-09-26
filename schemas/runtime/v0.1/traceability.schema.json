@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/traceability.schema.json",
+  "title": "Manuscript traceability v0.1",
+  "type": "object",
+  "required": ["traceability_version", "project_id", "manuscript_paths", "entries"],
+  "properties": {
+    "traceability_version": {"const": "research-traceability/v0.1"},
+    "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+    "manuscript_paths": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["anchor", "statement_type", "source_refs", "resource_refs"],
+        "properties": {
+          "anchor": {"type": "string", "minLength": 1},
+          "statement_type": {"enum": ["THEOREM", "EMPIRICAL_RESULT", "NOVELTY", "FIGURE", "TABLE"]},
+          "source_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "kind", "revision"],
+              "properties": {
+                "id": {"type": "string", "minLength": 1},
+                "kind": {"type": "string", "minLength": 1},
+                "revision": {"type": "integer", "minimum": 1}
+              },
+              "additionalProperties": false
+            }
+          },
+          "resource_refs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["uri", "sha256", "description"],
+              "properties": {
+                "uri": {"type": "string", "minLength": 1},
+                "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "description": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "anyOf": [
+          {"properties": {"source_refs": {"minItems": 1}}},
+          {"properties": {"resource_refs": {"minItems": 1}}}
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

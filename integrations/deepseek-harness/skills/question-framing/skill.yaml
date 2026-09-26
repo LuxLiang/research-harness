@@ -1,0 +1,21 @@
+id: question-framing
+purpose: Convert a vague objective into a precise and falsifiable ResearchQuestion.
+trigger_states: [DISCOVERY_QUESTION, PROPOSAL_STRUCTURING]
+inputs: [Project, Accepted Decisions, Previous ResearchQuestion when reframing, Frozen ResearchProposal and current document in PROPOSAL_REVIEW, Project input_resources in FULL_RESEARCH v0.1.4]
+outputs: [ResearchQuestion proposal]
+tools: [research_artifact_read, research_artifact_query, resource_read, research_proposal_write, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Read every relevant pinned Project input resource in chunks no larger than 20,000 characters, continuing from next_offset_chars until it is null.
+  - Analyze the objective through Practical, Rigor, and Narrative perspectives.
+  - Define problem, scope, hypotheses, expected contributions, and risks without novelty search.
+  - Check that every hypothesis is testable and reconcile perspective conflicts.
+  - When the pinned gate history contains two or more FEASIBILITY RETHINK_QUESTION verdicts, narrow the next ResearchQuestion to one central falsifiable novelty hypothesis. Keep known controllers, baselines, optimism variants, delay reductions, and correctness sublemmas as included supporting obligations or planned extensions rather than separate novelty hypotheses; do not silently drop required deliverables.
+  - In the first DISCOVERY_QUESTION action create the ResearchQuestion with status ACTIVE; DRAFT cannot satisfy the deterministic stage gate. After a FEASIBILITY RETHINK_QUESTION, REVISE the most recent active ResearchQuestion in place instead of creating a new artifact ID, so revision-pinned LiteratureEvidence relations accumulate on one scientific target. Preserve the ID, increment revision exactly once, and retain prior evidence-bearing scope unless the gate explicitly requires narrowing it.
+  - "Keep ResearchQuestion.provenance schema-exact: it may contain only created_by and updated_by actor objects. Record project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, and pinned_input_refs in a narrative field such as background, never as extra provenance keys."
+  - In PROPOSAL_REVIEW preserve source meaning and write a field-level source map without inventing specificity.
+completion_conditions: [The question is precise and falsifiable, Included and excluded scope are explicit, Contributions and risks are recorded, In PROPOSAL_REVIEW an immutable JSON field-level source-map resource is written with research_proposal_write.relative_path source-maps/proposal-rNNN.json and pinned in ResearchProposal.source_map]
+failure_classes: [AMBIGUOUS_OBJECTIVE, UNTESTABLE_HYPOTHESIS, SCOPE_CONFLICT, INPUT_INCOMPLETE]
+non_goals: [Literature search, Novelty judgment, Plan approval]
+forbidden_behaviors: [Performing or implying a novelty search, Inventing specificity not supported by Project or Decisions, Choosing a workflow transition]
+permissions: {profile: producer, sandbox: read-only, operations: [READ, QUERY, VALIDATE, CREATE, REVISE, RESOURCE_WRITE], artifact_kinds: [ResearchQuestion, ResearchProposal], field_policy: Full ResearchQuestion; in PROPOSAL_STRUCTURING only status question_refs source_map and revision metadata of ResearchProposal, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs]

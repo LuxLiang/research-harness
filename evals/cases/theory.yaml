@@ -1,0 +1,56 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: theory-correct-proof
+    title: Correct theorem and complete proof pass
+    domain: theory
+    skills: [theory-development, theory-verification]
+    evaluator: theory
+    input:
+      proof_complete: true
+      proposed_verified: true
+      declared_assumptions: [A]
+      used_assumptions: [A]
+      dependencies: {claim-main: [lemma-one], lemma-one: []}
+      counterexample: false
+      claim_strength: 2
+      proved_strength: 2
+    expected_findings: []
+  - id: theory-incomplete-proof
+    title: Incomplete proof cannot pass verification
+    domain: theory
+    skills: [theory-development, theory-verification]
+    evaluator: theory
+    input: {proof_complete: false, proposed_verified: true, claim_strength: 1, proved_strength: 1}
+    expected_findings: [{code: INCOMPLETE_PROOF_ACCEPTED, severity: S4}]
+  - id: theory-hidden-assumption
+    title: Hidden assumption is detected
+    domain: theory
+    skills: [theory-verification]
+    evaluator: theory
+    input: {proof_complete: true, declared_assumptions: [A], used_assumptions: [A, compactness], claim_strength: 1, proved_strength: 1}
+    expected_findings: [{code: HIDDEN_ASSUMPTION, severity: S4}]
+  - id: theory-circular-proof
+    title: Circular proof dependency is rejected
+    domain: theory
+    skills: [theory-development, theory-verification]
+    evaluator: theory
+    input:
+      proof_complete: true
+      dependencies: {claim-main: [lemma-one], lemma-one: [claim-main]}
+      claim_strength: 1
+      proved_strength: 1
+    expected_findings: [{code: CIRCULAR_PROOF, severity: S4}]
+  - id: theory-false-counterexample
+    title: False theorem with counterexample cannot be verified
+    domain: theory
+    skills: [theory-verification]
+    evaluator: theory
+    input: {proof_complete: true, counterexample: true, proposed_verified: true, claim_strength: 1, proved_strength: 1}
+    expected_findings: [{code: FALSE_THEOREM_ACCEPTED, severity: S4}]
+  - id: theory-silent-weakening
+    title: Silent theorem weakening is rejected
+    domain: theory
+    skills: [theory-development, theory-verification]
+    evaluator: theory
+    input: {proof_complete: true, proposed_verified: true, claim_strength: 3, proved_strength: 2}
+    expected_findings: [{code: SILENT_THEOREM_WEAKENING, severity: S4}]

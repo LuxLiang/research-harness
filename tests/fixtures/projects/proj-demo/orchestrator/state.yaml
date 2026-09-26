@@ -1,0 +1,49 @@
+orchestrator_version: research-orchestrator/v0.1
+project_id: proj-demo
+run_id: run-demo-orchestrator
+checkpoint_seq: 12
+status: RUNNING
+state: SYNTHESIS_COMPLETION_GATE
+resume_state: null
+route: MIXED
+active_plan:
+  id: plan-demo-main
+  kind: ResearchPlan
+  revision: 1
+frozen_snapshot:
+  git_commit: 0123456789abcdef0123456789abcdef01234567
+  artifacts:
+    - {id: rq-demo-correction, kind: ResearchQuestion, revision: 1}
+    - {id: plan-demo-main, kind: ResearchPlan, revision: 1}
+    - {id: lit-demo-example-2026-contracts, kind: LiteratureEvidence, revision: 1}
+    - {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+    - {id: exp-demo-state-recovery, kind: Experiment, revision: 1}
+branch_states:
+  theory: COMPLETED
+  experiment: COMPLETED
+skill_progress:
+  theory-recoverable-state:
+    track: theory
+    verification_profile: ADVERSARIAL
+    artifact_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+    required_skills: [theory-development, theory-verification]
+    completed_skills: [theory-development, theory-verification]
+    active_skill: null
+    status: COMPLETED
+  experiment-state-recovery:
+    track: experiment
+    verification_profile: null
+    artifact_ref: {id: exp-demo-state-recovery, kind: Experiment, revision: 1}
+    required_skills: [experiment-design, experiment-execution, experiment-verification]
+    completed_skills: [experiment-design, experiment-execution, experiment-verification]
+    active_skill: null
+    status: COMPLETED
+gate_results: []
+retry_counters: {}
+pending_action: null
+last_completed_action: action-demo-synthesis
+blocker: null
+pause: null
+cancellation: null
+created_at: '2026-08-21T00:00:00Z'
+updated_at: '2026-08-21T05:00:00Z'

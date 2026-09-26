@@ -1,0 +1,10 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Independent Lean verifier. Run clean builds and axiom audits, create Reviews only, and never edit the reviewed source.
+- id: bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  config:
+    enableRunInBackground: false
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/v0.1.1/decision.schema.json",
+  "title": "Decision Artifact v0.1.1",
+  "allOf": [
+    {"$ref": "common.schema.json#/$defs/envelope"},
+    {
+      "type": "object",
+      "required": ["project_id", "decision", "context", "reason", "alternatives_considered", "evidence_refs", "impact", "approved_by", "effective_at"],
+      "properties": {
+        "kind": {"const": "Decision"},
+        "id": {"type": "string", "pattern": "^decision-[a-z0-9][a-z0-9-]*$"},
+        "status": {"enum": ["PROPOSED", "ACCEPTED", "REJECTED", "SUPERSEDED", "REVERSED"]},
+        "decision": {"type": "string", "minLength": 1},
+        "context": {"type": "string", "minLength": 1},
+        "reason": {"type": "string", "minLength": 1},
+        "alternatives_considered": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["option", "rejected_because"],
+            "properties": {
+              "option": {"type": "string", "minLength": 1},
+              "rejected_because": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "evidence_refs": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/artifact_ref"}},
+        "impact": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["affected_ref", "description"],
+            "properties": {
+              "affected_ref": {"$ref": "common.schema.json#/$defs/artifact_ref"},
+              "description": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "approved_by": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/actor_ref"}},
+        "effective_at": {"type": ["string", "null"], "format": "date-time"},
+        "supersedes": {"allOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"properties": {"kind": {"const": "Decision"}}}]},
+        "reversal_reason": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"enum": ["SUPERSEDED", "REVERSED"]}}},
+          "then": {"required": ["supersedes"]}
+        },
+        {
+          "if": {"properties": {"status": {"const": "REVERSED"}}},
+          "then": {"required": ["reversal_reason"]}
+        },
+        {
+          "if": {"properties": {"status": {"const": "ACCEPTED"}}},
+          "then": {"properties": {"approved_by": {"minItems": 1}, "effective_at": {"type": "string"}}}
+        }
+      ]
+    }
+  ],
+  "unevaluatedProperties": false
+}

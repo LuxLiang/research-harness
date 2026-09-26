@@ -1,0 +1,37 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: literature-fabricated-citation
+    title: Fabricated citation is an integrity blocker
+    domain: literature
+    skills: [literature-novelty]
+    evaluator: literature
+    input: {citation_claimed: true, source_resolves: false, classification: KNOWN}
+    expected_findings: [{code: FABRICATED_CITATION, severity: S4}]
+  - id: literature-existing-result-open
+    title: Direct prior result cannot be labeled open
+    domain: literature
+    skills: [literature-novelty]
+    evaluator: literature
+    input: {classification: OPEN, verified_prior_relation: DIRECT, source_verified: true}
+    expected_findings: [{code: EXISTING_RESULT_MISLABELED_OPEN, severity: S4}]
+  - id: literature-equivalent-prior-open
+    title: Equivalent prior work invalidates an open label
+    domain: literature
+    skills: [literature-novelty]
+    evaluator: literature
+    input: {classification: OPEN, verified_prior_relation: EQUIVALENT, source_verified: true}
+    expected_findings: [{code: EQUIVALENT_PRIOR_IGNORED, severity: S4}]
+  - id: literature-uncertainty-overstated
+    title: Uncertain evidence remains uncertain
+    domain: literature
+    skills: [literature-novelty]
+    evaluator: literature
+    input: {classification: UNCERTAIN, certainty: CERTAIN, source_verified: false, evidence_confidence: 0.4}
+    expected_findings: [{code: UNCERTAINTY_OVERSTATED, severity: S3}]
+  - id: framing-does-not-claim-novelty
+    title: Question framing does not invent a novelty decision
+    domain: literature
+    skills: [question-framing]
+    evaluator: literature
+    input: {classification: UNCERTAIN, certainty: UNCERTAIN, source_verified: false, evidence_confidence: 0.0}
+    expected_findings: []

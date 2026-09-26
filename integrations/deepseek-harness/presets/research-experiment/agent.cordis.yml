@@ -1,0 +1,10 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Reproducible experiment researcher. Work only in the action sandbox and pin code, data, config, claim revisions, and run IDs.
+- id: bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  config:
+    enableRunInBackground: false
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/skills/v0.1/skill-contract.schema.json",
+  "title": "Research Skill contract v0.1",
+  "type": "object",
+  "required": ["id", "purpose", "trigger_states", "inputs", "outputs", "tools", "procedure", "completion_conditions", "failure_classes", "non_goals", "permissions", "provenance", "forbidden_behaviors"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "purpose": {"type": "string", "minLength": 12},
+    "trigger_states": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "inputs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "outputs": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "tools": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "procedure": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}},
+    "completion_conditions": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "failure_classes": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"}},
+    "non_goals": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "permissions": {
+      "type": "object",
+      "required": ["profile", "sandbox", "operations", "artifact_kinds", "field_policy", "canonical_promote"],
+      "properties": {
+        "profile": {"enum": ["producer", "theory", "formal", "reviewer", "formal-reviewer", "experiment", "experiment-reviewer", "writer"]},
+        "sandbox": {"enum": ["read-only", "scratch-write", "run-write", "paper-write"]},
+        "operations": {"type": "array", "uniqueItems": true, "items": {"enum": ["READ", "QUERY", "VALIDATE", "CREATE", "REVISE", "RESOURCE_WRITE", "RUN"]}},
+        "artifact_kinds": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "field_policy": {"type": "string", "minLength": 1},
+        "canonical_promote": {"const": false}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {"type": "array", "minItems": 7, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "forbidden_behaviors": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": false
+}

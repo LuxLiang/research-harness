@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+entrypoint="${repo_root}/integrations/deepseek-harness/lib/operator-cli.js"
+
+command -v node >/dev/null 2>&1 || {
+  echo "node is required to call the Cordis research operator" >&2
+  exit 2
+}
+
+if [[ ! -f "${entrypoint}" ]]; then
+  echo "Cordis integration is not built; run scripts/install_dsh_plugin.sh first" >&2
+  exit 2
+fi
+
+exec node "${entrypoint}" "$@"

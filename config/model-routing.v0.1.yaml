@@ -1,0 +1,32 @@
+routing_version: research-model-routing/v0.1
+tier_order: [economy, balanced, frontier]
+tier_aliases:
+  economy: gpt-5.6-luna
+  balanced: gpt-5.6-terra
+  frontier: gpt-5.6-sol
+tier_reasoning: {economy: low, balanced: medium, frontier: high}
+verification_reserve_fraction: 0.30
+cost_estimates_percent:
+  economy: {low: 0.20, medium: 0.30, high: 0.45}
+  balanced: {low: 0.40, medium: 0.60, high: 0.85}
+  frontier: {low: 0.75, medium: 1.00, high: 1.25}
+skills:
+  question-framing: {quality_floor: balanced, default_tier: balanced, reasoning_effort: medium}
+  literature-novelty: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high}
+  research-planning: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high}
+  theory-development: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  theory-verification: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  lean-formalization: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high, critical_verification: true}
+  lean-verification: {quality_floor: balanced, default_tier: balanced, reasoning_effort: medium, critical_verification: true}
+  semantic-alignment-review: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  experiment-design: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high}
+  experiment-execution: {quality_floor: economy, default_tier: economy, reasoning_effort: low}
+  experiment-verification: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  research-synthesis: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high}
+  completion-review: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high, critical_verification: true}
+  consistency-review: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  targeted-followup: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high}
+  scientific-writing: {quality_floor: balanced, default_tier: balanced, reasoning_effort: high}
+  final-review: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  proposal-correctness-review: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high, critical_verification: true}
+  proposal-revision: {quality_floor: frontier, default_tier: frontier, reasoning_effort: high}

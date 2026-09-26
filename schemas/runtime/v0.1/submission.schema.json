@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/submission.schema.json",
+  "title": "Research handler submission v0.1",
+  "type": "object",
+  "required": [
+    "submission_version", "project_id", "action_id", "bundle_sha256",
+    "proposal_ids", "outcome"
+  ],
+  "properties": {
+    "submission_version": {"const": "research-submission/v0.1"},
+    "project_id": {"type": "string", "pattern": "^proj-[a-z0-9][a-z0-9-]*$"},
+    "action_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+    "bundle_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "proposal_ids": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+      "uniqueItems": true
+    },
+    "outcome": {"enum": ["SUBMITTED", "NO_CHANGE", "FAILED"]},
+    "gate_assessment": {"type": "object"},
+    "failure_classification": {
+      "enum": ["LOCAL_RETRY", "INCOMPLETE", "RETHINK_CLAIM", "RETHINK_PLAN", "RETHINK_QUESTION"]
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"outcome": {"const": "FAILED"}}},
+      "then": {"required": ["failure_classification"]}
+    }
+  ],
+  "additionalProperties": false
+}

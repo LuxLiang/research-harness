@@ -1,0 +1,85 @@
+matrix_version: research-failure-injection/v0.1
+cases:
+  # Runtime
+  - {id: model-timeout, category: runtime, test: unittest:test_model_timeout_retries_then_blocks, severity: S3}
+  - {id: tool-timeout, category: runtime, test: unittest:test_lean_timeout_fails_closed, severity: S3}
+  - {id: agent-cancellation, category: runtime, test: unittest:test_agent_cancellation_does_not_advance, severity: S3}
+  - {id: agent-runtime-crash, category: runtime, test: unittest:test_agent_crash_resumes_same_pending_action, severity: S4}
+  - {id: python-sidecar-crash, category: runtime, test: unittest:test_sidecar_crash_restart_preserves_state, severity: S3}
+  - {id: interrupted-subprocess, category: runtime, test: unittest:test_experiment_crash_journal_prevents_duplicate_run, severity: S4}
+  - {id: context-overflow, category: runtime, test: existing:test_context_limit_fails_closed_instead_of_truncating, severity: S3}
+  - {id: dependency-tool-unavailability, category: runtime, test: unittest:test_dependency_unavailable_retries_then_blocks, severity: S3}
+  - {id: retry-budget-scope-reset, category: runtime, test: unittest:test_scope_transition_resets_transient_action_retry_budget, severity: S3}
+
+  # Artifact and Git
+  - {id: artifact-revision-conflict, category: artifact_git, test: existing:test_revision_conflict_is_detected_against_canonical_state, severity: S4}
+  - {id: concurrent-stale-proposal, category: artifact_git, test: existing:test_staged_revision_promotes_once_and_preserves_unrelated_changes, severity: S4}
+  - {id: invalid-schema, category: artifact_git, test: existing:test_unknown_field_is_rejected, severity: S4}
+  - {id: dangling-reference, category: artifact_git, test: existing:test_dangling_reference_is_rejected, severity: S4}
+  - {id: claim-dag-cycle, category: artifact_git, test: existing:test_claim_dependency_cycle_is_rejected, severity: S4}
+  - {id: corrupted-state-yaml, category: artifact_git, test: unittest:test_corrupted_checkpoint_recovers_from_git_into_blocked, severity: S4}
+  - {id: dirty-git-target, category: artifact_git, test: unittest:test_dirty_transaction_target_fails_closed, severity: S3}
+  - {id: unrelated-dirty-index, category: artifact_git, test: unittest:test_unrelated_staged_change_is_preserved, severity: S3}
+  - {id: git-commit-failure, category: artifact_git, test: unittest:test_git_commit_failure_rolls_back_control_transaction, severity: S4}
+  - {id: crash-staging-promotion, category: artifact_git, test: unittest:test_prepared_partial_transaction_rolls_back, severity: S4}
+  - {id: partial-transaction, category: artifact_git, test: unittest:test_committed_journal_recovers_after_later_commit, severity: S4}
+  - {id: remote-push-failure, category: artifact_git, test: unittest:test_remote_push_failure_keeps_local_commit, severity: S3}
+
+  # Theory and Lean (Step 5 deterministic adversarial cases)
+  - {id: incomplete-proof, category: theory_lean, test: eval:theory-incomplete-proof, severity: S3}
+  - {id: hidden-assumption, category: theory_lean, test: eval:theory-hidden-assumption, severity: S4}
+  - {id: false-theorem, category: theory_lean, test: eval:theory-false-counterexample, severity: S4}
+  - {id: counterexample, category: theory_lean, test: eval:theory-false-counterexample, severity: S4}
+  - {id: silent-theorem-weakening, category: theory_lean, test: eval:theory-silent-weakening, severity: S4}
+  - {id: lean-syntax-build-failure, category: theory_lean, test: unittest:test_lean_failure_classification, severity: S3}
+  - {id: lean-sorry, category: theory_lean, test: eval:lean-sorry, severity: S4}
+  - {id: lean-sorryax, category: theory_lean, test: eval:lean-sorryax, severity: S4}
+  - {id: lean-unapproved-axiom, category: theory_lean, test: eval:lean-custom-axiom, severity: S4}
+  - {id: stronger-formal-assumptions, category: theory_lean, test: eval:lean-stronger-assumptions, severity: S4}
+  - {id: weaker-formal-conclusion, category: theory_lean, test: eval:lean-weaker-conclusion, severity: S4}
+  - {id: mathlib-library-gap, category: theory_lean, test: eval:lean-library-gap, severity: S3}
+
+  # Experiment
+  - {id: implementation-bug, category: experiment, test: unittest:test_experiment_timeout_records_failed_raw_run, severity: S3}
+  - {id: resource-failure, category: experiment, test: unittest:test_experiment_timeout_records_failed_raw_run, severity: S3}
+  - {id: interrupted-run, category: experiment, test: unittest:test_experiment_crash_journal_prevents_duplicate_run, severity: S4}
+  - {id: duplicate-execution, category: experiment, test: unittest:test_experiment_crash_journal_prevents_duplicate_run, severity: S4}
+  - {id: unavailable-baseline, category: experiment, test: eval:experiment-unfair-baseline, severity: S3}
+  - {id: corrupted-dataset, category: experiment, test: unittest:test_corrupted_dataset_is_rejected_before_dispatch, severity: S4}
+  - {id: protocol-change-after-ready, category: experiment, test: eval:experiment-protocol-change-after-ready, severity: S4}
+  - {id: metric-switching, category: experiment, test: eval:experiment-metric-switching, severity: S4}
+  - {id: cherry-picked-seed, category: experiment, test: eval:experiment-cherry-picked-seed, severity: S4}
+  - {id: omitted-failed-run, category: experiment, test: eval:experiment-omitted-failed-run, severity: S4}
+  - {id: unfair-tuning-budget, category: experiment, test: eval:experiment-unfair-baseline, severity: S4}
+  - {id: data-leakage, category: experiment, test: eval:experiment-data-leakage, severity: S4}
+  - {id: contradictory-result, category: experiment, test: eval:experiment-contradiction-not-failure, severity: S4}
+
+  # Scientific integrity
+  - {id: fabricated-citation, category: scientific_integrity, test: eval:literature-fabricated-citation, severity: S4}
+  - {id: equivalent-known-as-novel, category: scientific_integrity, test: eval:literature-equivalent-prior-open, severity: S4}
+  - {id: unsupported-novelty, category: scientific_integrity, test: eval:writing-unsupported-novelty, severity: S4}
+  - {id: unverified-claim-as-theorem, category: scientific_integrity, test: eval:writing-supported-as-proved, severity: S4}
+  - {id: inconclusive-as-positive, category: scientific_integrity, test: eval:writing-inconclusive-as-positive, severity: S4}
+  - {id: contradiction-removed, category: scientific_integrity, test: eval:synthesis-hidden-contradiction, severity: S4}
+  - {id: untraced-figure-table, category: scientific_integrity, test: eval:writing-untraced-number, severity: S4}
+  - {id: manuscript-theorem-mismatch, category: scientific_integrity, test: eval:writing-theorem-mismatch, severity: S4}
+  - {id: missing-manuscript-trace, category: scientific_integrity, test: unittest:test_final_review_blocks_missing_or_stale_traceability, severity: S4}
+  - {id: step7-golden-path-regression, category: scientific_integrity, test: unittest:test_step7_golden_pilots_remain_accepted_after_hardening, severity: S4}
+
+  # Human controls
+  - {id: pause-resume, category: human_control, test: unittest:test_pause_resume_preserves_pending_scientific_state, severity: S4}
+  - {id: cancel-not-pause, category: human_control, test: unittest:test_cancel_is_terminal_and_distinct, severity: S4}
+  - {id: blocked-unblock-decision, category: human_control, test: unittest:test_unblock_requires_explicit_recovery_decision, severity: S4}
+  - {id: final-approval, category: human_control, test: existing:test_complete_theory_workflow_reaches_done, severity: S4}
+
+  # Required crash points
+  - {id: crash-before-agent-dispatch, category: crash_point, test: unittest:test_crash_before_dispatch_preserves_pending_action, severity: S4}
+  - {id: crash-during-agent-execution, category: crash_point, test: unittest:test_agent_crash_resumes_same_pending_action, severity: S4}
+  - {id: crash-after-proposal, category: crash_point, test: unittest:test_staged_proposal_is_never_canonical_without_promotion, severity: S4}
+  - {id: crash-during-validation, category: crash_point, test: unittest:test_validation_failure_never_promotes_candidate, severity: S4}
+  - {id: crash-during-promotion, category: crash_point, test: unittest:test_prepared_partial_transaction_rolls_back, severity: S4}
+  - {id: crash-after-artifact-before-checkpoint, category: crash_point, test: unittest:test_prepared_partial_transaction_rolls_back, severity: S4}
+  - {id: crash-during-git-commit, category: crash_point, test: unittest:test_git_commit_failure_rolls_back_control_transaction, severity: S4}
+  - {id: crash-during-lean, category: crash_point, test: unittest:test_lean_timeout_fails_closed, severity: S4}
+  - {id: crash-during-experiment, category: crash_point, test: unittest:test_experiment_crash_journal_prevents_duplicate_run, severity: S4}
+  - {id: crash-before-state-transition, category: crash_point, test: unittest:test_staged_proposal_is_never_canonical_without_promotion, severity: S4}

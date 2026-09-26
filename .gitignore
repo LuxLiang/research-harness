@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+dist/
+build/
+node_modules/
+integrations/deepseek-harness/lib/
+.lake/
+
+# Runtime traces are not research state.
+.harness/
+
+# Large local experiment outputs should be referenced by URI and checksum.
+**/raw_outputs/
+**/checkpoints/
+**/datasets/
+*.ckpt
+*.pt
+*.pth
+
+# User research belongs in separate workspaces, never in the library checkout.
+/projects/
+/experiments/
+/proof_check_harness/
+.env
+.env.*
+!.env.example
+.DS_Store

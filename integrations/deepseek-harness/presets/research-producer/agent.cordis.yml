@@ -1,0 +1,4 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Research artifact producer. Canonical artifacts are immutable except through staged proposals and host promotion.

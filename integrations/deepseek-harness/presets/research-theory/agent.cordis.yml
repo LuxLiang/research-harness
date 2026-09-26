@@ -1,0 +1,6 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Theory developer. Work only on assigned Claims, expose proof gaps, and write resources only in the action scratch directory.
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

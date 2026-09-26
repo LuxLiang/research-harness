@@ -1,0 +1,80 @@
+schema_version: research-artifact/v0.1.2
+kind: Experiment
+id: exp-demo-state-recovery
+project_id: proj-demo
+title: Artifact-only state recovery experiment
+status: COMPLETED
+revision: 1
+created_at: "2026-08-21T00:00:00Z"
+updated_at: "2026-08-21T00:00:00Z"
+provenance:
+  created_by: {actor_type: agent, actor_id: experiment-demo, session_id: session-demo-004}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [experiment, reproducibility]
+hypothesis:
+  claim_ref: {id: claim-demo-recoverable-state, kind: ScientificClaim, revision: 1}
+  operationalization: A fresh process must recover all project objects and references without reading session logs.
+method: Load all YAML artifacts, validate them, and count the expected artifact kinds and graph edges.
+baselines:
+  - name: chat-only reconstruction
+    version: conceptual-v1
+    configuration: {session_history_available: false}
+datasets:
+  - name: proj-demo artifact set
+    version: revision-1
+    uri: projects/proj-demo
+    sha256: "1111111111111111111111111111111111111111111111111111111111111111"
+    split_definition: All YAML artifacts in the demonstration project.
+    license: MIT
+metrics:
+  - name: artifact_recovery_fraction
+    definition: Fraction of expected stable artifact IDs recovered and validated.
+    direction: HIGHER_BETTER
+    aggregation: exact fraction
+configuration:
+  parameters: {expected_artifact_count: 8}
+  environment: Python 3.11 with PyYAML and jsonschema
+interpretation_plan:
+  supported_when: [artifact_recovery_fraction equals 1.0]
+  contradicted_when: [artifact_recovery_fraction is below 1.0 because canonical artifacts cannot be recovered]
+  inconclusive_when: [the run cannot access the fixed artifact snapshot]
+  analysis_plan: Compare recovered stable IDs with the preregistered expected set.
+  seeds: [0]
+  repetitions: 1
+  hyperparameter_budget: No tuned hyperparameters; execute the fixed validator once.
+  ablations: []
+  statistical_procedure: Exact deterministic comparison; no inferential statistic is used.
+  exclusions: [External resource availability is assessed separately.]
+protocol_lock:
+  revision: 1
+  sha256: "6f9719aa47d631052fc23ca0498138d000d40f7398aea43b1d502fabddfdb1aa"
+  locked_at: "2026-08-21T00:30:00Z"
+code_location:
+  repository: https://example.org/research-harness.git
+  git_commit: "0123456789abcdef0123456789abcdef01234567"
+  entrypoint: research-artifacts validate
+runs:
+  - run_id: recovery-001
+    status: SUCCEEDED
+    seed: 0
+    protocol_revision: 1
+    protocol_sha256: "6f9719aa47d631052fc23ca0498138d000d40f7398aea43b1d502fabddfdb1aa"
+    config_hash: "2222222222222222222222222222222222222222222222222222222222222222"
+    code_commit: "0123456789abcdef0123456789abcdef01234567"
+    dataset_hashes: ["1111111111111111111111111111111111111111111111111111111111111111"]
+    environment: Python 3.11
+    environment_hash: "5555555555555555555555555555555555555555555555555555555555555555"
+    started_at: "2026-08-21T01:00:00Z"
+    finished_at: "2026-08-21T01:00:02Z"
+    outputs:
+      - uri: https://example.org/runs/recovery-001.json
+        sha256: "3333333333333333333333333333333333333333333333333333333333333333"
+        media_type: application/json
+        description: Immutable demonstration run output.
+    metric_values: {artifact_recovery_fraction: 1.0}
+    deviations: []
+result:
+  summary: All eight artifact kinds and their references were recovered without session history.
+  aggregate_metrics: {artifact_recovery_fraction: 1.0}
+  hypothesis_outcome: SUPPORTED
+  limitations: [The demonstration does not measure semantic scientific correctness.]

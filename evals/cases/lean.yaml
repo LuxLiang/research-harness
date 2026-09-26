@@ -1,0 +1,64 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: lean-sorry
+    title: sorry is forbidden
+    domain: lean
+    skills: [lean-formalization, lean-verification]
+    evaluator: lean
+    input: {source: "theorem t : True := by sorry", approved_axioms: []}
+    expected_findings: [{code: SORRY_ACCEPTED, severity: S4}]
+  - id: lean-sorryax
+    title: sorryAx is forbidden
+    domain: lean
+    skills: [lean-verification]
+    evaluator: lean
+    input: {source: "#check sorryAx True true", approved_axioms: []}
+    expected_findings: [{code: SORRYAX_ACCEPTED, severity: S4}]
+  - id: lean-custom-axiom
+    title: Unapproved custom axiom is forbidden
+    domain: lean
+    skills: [lean-verification]
+    evaluator: lean
+    input:
+      source: |
+        axiom magic : False
+        theorem t : False := magic
+      approved_axioms: []
+    expected_findings: [{code: UNAPPROVED_AXIOM_ACCEPTED, severity: S4}]
+  - id: lean-stronger-assumptions
+    title: Lean theorem cannot strengthen assumptions
+    domain: lean
+    skills: [lean-formalization, semantic-alignment-review]
+    evaluator: lean
+    input: {source: "theorem t : True := by trivial", claim_assumptions: [convex], lean_assumptions: [convex, smooth], claim_conclusion_strength: 2, lean_conclusion_strength: 2}
+    expected_findings: [{code: LEAN_STRENGTHENED_ASSUMPTIONS, severity: S4}]
+  - id: lean-weaker-conclusion
+    title: Lean theorem cannot weaken the conclusion
+    domain: lean
+    skills: [lean-formalization, semantic-alignment-review]
+    evaluator: lean
+    input: {source: "theorem t : True := by trivial", claim_assumptions: [A], lean_assumptions: [A], claim_conclusion_strength: 3, lean_conclusion_strength: 2}
+    expected_findings: [{code: LEAN_WEAKENED_CONCLUSION, severity: S4}]
+  - id: lean-library-gap
+    title: Library gap is not a false theorem
+    domain: lean
+    skills: [lean-verification]
+    evaluator: lean
+    input: {source: "import Missing.Library", build_error_kind: MISSING_LIBRARY, classification: LIBRARY_GAP, approved_axioms: []}
+    expected_findings: []
+  - id: lean-passing-pinned-proof
+    title: Clean pinned Lean proof passes integrity checks
+    domain: lean
+    skills: [lean-formalization, lean-verification, semantic-alignment-review]
+    evaluator: lean
+    input:
+      source: "theorem t : True := by trivial"
+      approved_axioms: []
+      claim_assumptions: [A]
+      lean_assumptions: [A]
+      claim_conclusion_strength: 2
+      lean_conclusion_strength: 2
+      clean_build: true
+      lean_version: 4.19.0
+      mathlib_commit: abcdef1234567890
+    expected_findings: []

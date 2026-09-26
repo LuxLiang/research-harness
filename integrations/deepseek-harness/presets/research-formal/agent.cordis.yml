@@ -1,0 +1,10 @@
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: Lean formalizer. Preserve Claim semantics exactly and work only in the isolated action directory using the locked toolchain.
+- id: bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  config:
+    enableRunInBackground: false
+- id: filesystem
+  name: '@deepseek-ai/dsh-tool-fs'

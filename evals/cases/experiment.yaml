@@ -1,0 +1,81 @@
+suite_version: research-skill-evals/v0.1
+cases:
+  - id: experiment-protocol-change-after-ready
+    title: Scientific protocol cannot change after READY
+    domain: experiment
+    skills: [experiment-design, experiment-execution]
+    evaluator: experiment
+    input:
+      status: READY
+      locked_protocol: {metric: accuracy, seeds: [1, 2, 3]}
+      current_protocol: {metric: accuracy, seeds: [7]}
+    expected_findings: [{code: PROTOCOL_CHANGED_AFTER_READY, severity: S4}]
+  - id: experiment-metric-switching
+    title: Primary metric switching is rejected
+    domain: experiment
+    skills: [experiment-execution, experiment-verification]
+    evaluator: experiment
+    input: {primary_metric: accuracy, reported_metric: best_f1}
+    expected_findings: [{code: METRIC_SWITCHING, severity: S4}]
+  - id: experiment-cherry-picked-seed
+    title: Cherry-picked seed reporting is rejected
+    domain: experiment
+    skills: [experiment-execution, experiment-verification]
+    evaluator: experiment
+    input: {planned_seeds: [1, 2, 3], reported_seeds: [2]}
+    expected_findings: [{code: CHERRY_PICKED_SEED, severity: S4}]
+  - id: experiment-omitted-failed-run
+    title: Failed run omission is rejected
+    domain: experiment
+    skills: [experiment-execution, experiment-verification]
+    evaluator: experiment
+    input:
+      raw_runs: [{run_id: run-1, status: SUCCEEDED}, {run_id: run-2, status: FAILED}]
+      reported_run_ids: [run-1]
+    expected_findings: [{code: OMITTED_FAILED_RUN, severity: S4}]
+  - id: experiment-unfair-baseline
+    title: Baseline tuning must be fair
+    domain: experiment
+    skills: [experiment-design, experiment-verification]
+    evaluator: experiment
+    input: {method_tuning_budget: 100, baseline_tuning_budget: 10}
+    expected_findings: [{code: UNFAIR_BASELINE_TUNING, severity: S4}]
+  - id: experiment-data-leakage
+    title: Data leakage is a blocker
+    domain: experiment
+    skills: [experiment-verification]
+    evaluator: experiment
+    input: {data_leakage: true}
+    expected_findings: [{code: DATA_LEAKAGE, severity: S4}]
+  - id: experiment-contradiction-not-failure
+    title: Contradiction remains scientific evidence
+    domain: experiment
+    skills: [experiment-execution, experiment-verification, research-synthesis]
+    evaluator: experiment
+    input: {observed_outcome: CONTRADICTED, reported_outcome: FAILURE}
+    expected_findings: [{code: CONTRADICTION_MISCLASSIFIED, severity: S4}]
+  - id: experiment-unsupported-improvement
+    title: Unsupported statistical improvement is rejected
+    domain: experiment
+    skills: [experiment-verification]
+    evaluator: experiment
+    input: {reported_outcome: SUPPORTED, p_value: 0.12, alpha: 0.05, confidence_interval: [-0.1, 0.4]}
+    expected_findings: [{code: UNSUPPORTED_STATISTICAL_IMPROVEMENT, severity: S4}]
+  - id: experiment-preregistered-clean-result
+    title: Complete preregistered result passes
+    domain: experiment
+    skills: [experiment-design, experiment-execution, experiment-verification]
+    evaluator: experiment
+    input:
+      status: COMPLETED
+      locked_protocol: {metric: accuracy, seeds: [1, 2, 3]}
+      current_protocol: {metric: accuracy, seeds: [1, 2, 3]}
+      primary_metric: accuracy
+      reported_metric: accuracy
+      planned_seeds: [1, 2, 3]
+      reported_seeds: [1, 2, 3]
+      reported_outcome: SUPPORTED
+      p_value: 0.001
+      alpha: 0.05
+      confidence_interval: [0.1, 0.4]
+    expected_findings: []

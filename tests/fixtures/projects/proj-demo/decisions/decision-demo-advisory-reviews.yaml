@@ -1,0 +1,27 @@
+schema_version: research-artifact/v0.1.2
+kind: Decision
+id: decision-demo-advisory-reviews
+project_id: proj-demo
+title: Keep reviews advisory
+status: ACCEPTED
+revision: 1
+created_at: "2026-08-21T04:00:00Z"
+updated_at: "2026-08-21T04:00:00Z"
+provenance:
+  created_by: {actor_type: human, actor_id: demo-researcher}
+  updated_by: {actor_type: human, actor_id: demo-researcher}
+tags: [architecture, review-policy]
+decision: Review artifacts provide recommendations but never mutate their target artifact directly.
+context: Reviewer authority must remain separate from workflow control and human judgment.
+reason: Separation keeps review evidence durable while allowing different workflows to apply different gates.
+alternatives_considered:
+  - option: Let reviewers directly change target status.
+    rejected_because: It couples scientific assessment to orchestration authority.
+evidence_refs:
+  - {id: review-demo-claim-001, kind: Review}
+impact:
+  - affected_ref: {id: proj-demo, kind: Project}
+    description: Project transitions must be performed explicitly by an orchestrator or human.
+approved_by:
+  - {actor_type: human, actor_id: demo-researcher}
+effective_at: "2026-08-21T04:00:00Z"

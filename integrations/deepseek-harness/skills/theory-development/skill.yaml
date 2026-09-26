@@ -1,0 +1,18 @@
+id: theory-development
+purpose: Develop explicit ScientificClaims, dependency graphs, and honest proof resources.
+trigger_states: [EXECUTION_TRACKS_THEORY_DEVELOP, FOLLOWUP_CLAIM_RETHINK]
+inputs: [Planned Claim output, Mathematical LiteratureEvidence, Dependency Claims, Reviews, Project input_resources in FULL_RESEARCH v0.1.4]
+outputs: [ScientificClaim proposals, Immutable proof resources, Replacement links]
+tools: [research_artifact_read, research_artifact_query, resource_read, research_artifact_validate, research_artifact_propose, resource_write, math_check, research_action_submit]
+procedure:
+  - Read every relevant pinned Project input resource completely in chunks no larger than 20,000 characters.
+  - On initial development create the exact planned Claim ID; on targeted revision or rethink revise the exact canonical target Claim ID with base_revision equal to the ContextBundle revision, and never create an action-local replacement, alias, or parallel Claim.
+  - Fix quantifiers, domains, constants, assumptions, and dependency edges before proving.
+  - Construct a proof plan and proof in dependency order while testing boundary cases.
+  - Record every gap and counterexample concern; stop at SUPPORTED and never self-verify.
+completion_conditions: [Claim is at least FORMALIZED, Dependencies form a valid DAG, Proof resources and known gaps are recorded]
+failure_classes: [PROOF_GAP, DEPENDENCY_GAP, ASSUMPTION_GAP, FALSE_CLAIM_SUSPECTED]
+non_goals: [Self-marking VERIFIED, Hiding proof gaps, Choosing workflow transitions]
+forbidden_behaviors: [Marking a Claim VERIFIED or IN_PAPER, Hiding assumptions proof gaps or counterexamples, Reusing a verifier session, Creating a new Claim ID for a targeted revision of an existing canonical Claim]
+permissions: {profile: theory, sandbox: scratch-write, operations: [READ, QUERY, VALIDATE, CREATE, REVISE, RESOURCE_WRITE], artifact_kinds: [ScientificClaim], field_policy: Assigned target Claim only, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, proof_sha256, dependency_revisions]

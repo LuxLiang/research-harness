@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-harness.local/schemas/runtime/v0.1/sidecar.schema.json",
+  "title": "Research sidecar JSONL envelope v0.1",
+  "$defs": {
+    "request": {
+      "type": "object",
+      "required": ["protocol", "request_id", "method", "params"],
+      "properties": {
+        "protocol": {"const": "research-sidecar/v0.1"},
+        "request_id": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1},
+        "params": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "required": ["protocol", "request_id", "ok"],
+      "properties": {
+        "protocol": {"const": "research-sidecar/v0.1"},
+        "request_id": {"type": ["string", "null"]},
+        "ok": {"type": "boolean"},
+        "result": {},
+        "error": {
+          "type": "object",
+          "required": ["code", "message", "details", "retryable"],
+          "properties": {
+            "code": {"type": "string"},
+            "message": {"type": "string"},
+            "details": {},
+            "retryable": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "oneOf": [{"$ref": "#/$defs/request"}, {"$ref": "#/$defs/response"}]
+}

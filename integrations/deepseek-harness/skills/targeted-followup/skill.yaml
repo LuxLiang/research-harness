@@ -1,0 +1,18 @@
+id: targeted-followup
+purpose: Convert specific blockers into the smallest feasible follow-up work set.
+trigger_states: [FOLLOWUP_TARGETED, WRITING_TARGETED_REVISION_SCIENTIFIC]
+inputs: [Gate targets, Review issues, Active ResearchPlan, Completed outputs]
+outputs: [ResearchPlan revision with minimal new work packages and planned outputs]
+tools: [research_artifact_read, research_artifact_query, research_artifact_validate, research_artifact_propose, research_action_submit]
+procedure:
+  - Read the active ResearchPlan and pin its exact artifact ID and revision.
+  - Locate the smallest causal gap for each blocker and preserve all satisfied work.
+  - Stage exactly one CREATE proposal for a successor ResearchPlan with status IN_PROGRESS; pin the completed active plan as an input and never revise it in place.
+  - Add only necessary Literature, Theory, Experiment, or Formal work and dependencies.
+  - Map each blocker to one work item and explicit success criteria.
+completion_conditions: [Every blocker maps to a work item, Unaffected tracks remain complete, Follow-up DAG is valid]
+failure_classes: [BLOCKER_UNLOCALIZED, NO_FEASIBLE_FOLLOWUP, DEPENDENCY_EXPANSION_REQUIRED]
+non_goals: [Rewriting the whole Plan, Executing follow-up, Retrying unaffected tracks]
+forbidden_behaviors: [Rerunning unaffected work packages, Executing the planned follow-up, Escalating rethink level without a typed Review, Revising a completed active ResearchPlan in place]
+permissions: {profile: producer, sandbox: read-only, operations: [READ, QUERY, VALIDATE, CREATE], artifact_kinds: [ResearchPlan], field_policy: Create one successor plan pinned to the completed active ResearchPlan, canonical_promote: false}
+provenance: [project_id, run_id, action_id, dsh_session_id, bundle_sha256, input_git_commit, pinned_input_refs, source_gate_refs, preserved_work_items]
