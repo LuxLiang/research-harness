@@ -1,4 +1,4 @@
-include README.md VERSION AGENTS.md CONTRIBUTING.md
+include README.md VERSION AGENTS.md CONTRIBUTING.md LICENSE
 recursive-include schemas *.json *.md
 recursive-include config *.yaml
 recursive-include evals *.yaml *.json *.md

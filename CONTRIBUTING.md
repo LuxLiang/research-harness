@@ -1,37 +1,61 @@
 # Contributing
 
-Keep framework source and research data separate. Do not add live projects,
-manuscripts, experiment scripts for a particular study, model checkpoints,
-credentials, runtime traces, or private machine paths. Use small, fictional
-fixtures under `tests/fixtures/` for regression tests. Run research from an
-independent workspace initialized with `research --workspace PATH workspace-init`.
+Keep research data in an independent workspace. Commit only framework source,
+contracts, documentation, and small fictional fixtures. Do not commit live
+projects, model checkpoints, credentials, runtime logs, or private machine paths.
 
-Install Python development dependencies with `python -m pip install -e '.[dev]'`.
-Run `python -m unittest discover -s tests -p 'test_*.py'` and `research-evals`.
-For integration changes, run `npm ci`, `npm run build`, and `npm test` inside
-`integrations/deepseek-harness/`.
+## Development checks
 
-The operator tests bind temporary Unix sockets and require a POSIX environment
-that permits local sockets. They use stub controllers, not real models. Node
-tests also exercise the Python-to-Node bridge; install the Python package first,
-and set `RESEARCH_HARNESS_TEST_PYTHON` if the test interpreter is not `python3`.
-
-Canonical schemas, skill contracts, presets, routing defaults, and evaluation
-cases remain in their top-level source directories. The package build copies
-these into `research_artifacts/_data/`. Do not edit generated build directories.
-Test the built wheel from outside the checkout as well as the editable install:
+Use Python 3.11+, Git, and a POSIX environment that permits local Unix sockets:
 
 ```bash
-python -m build
-python -m venv /tmp/research-harness-wheel-check
-/tmp/research-harness-wheel-check/bin/pip install dist/*.whl
-cd /tmp
-/tmp/research-harness-wheel-check/bin/research --workspace /tmp/example-workspace workspace-init
-/tmp/research-harness-wheel-check/bin/research --workspace /tmp/example-workspace init example
-/tmp/research-harness-wheel-check/bin/research --workspace /tmp/example-workspace status example
-/tmp/research-harness-wheel-check/bin/research-evals
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+python -m unittest discover -s tests -p 'test_*.py'
+research-evals --baseline evals/baselines/v0.1.json
 ```
 
-Use new temporary paths for each smoke test. A workspace initializer never
-reuses a nonempty directory. Synchronize release versions in `pyproject.toml`,
-`VERSION`, `research_artifacts/__init__.py`, and the TypeScript package metadata.
+For integration changes, also use Node.js 20+ and npm:
+
+```bash
+cd integrations/deepseek-harness
+npm ci
+npm run build
+npm test
+```
+
+Operator tests use stub controllers and local sockets, not real models. Node
+tests also exercise the Python bridge; set `RESEARCH_HARNESS_TEST_PYTHON` to the
+installed Python interpreter if it is not available as `python3`.
+
+Preserve deterministic transitions, revision-pinned evidence, independent
+verification, and recoverable transactions. Keep canonical resources in
+`schemas/`, `config/`, `evals/`, and the integration's `skills/` and `presets/`.
+Builds bundle them automatically; do not edit generated copies.
+
+## Package verification
+
+Build an sdist and wheel, then test the installed wheel outside the checkout.
+Run this from the repository root with development dependencies installed:
+
+```bash
+export RELEASE_CHECK="$(mktemp -d)"
+python -m build --outdir "$RELEASE_CHECK/dist"
+python -m venv "$RELEASE_CHECK/venv"
+"$RELEASE_CHECK/venv/bin/pip" install "$RELEASE_CHECK"/dist/*.whl
+cd "$RELEASE_CHECK"
+"$RELEASE_CHECK/venv/bin/research" --workspace "$RELEASE_CHECK/workspace" workspace-init
+"$RELEASE_CHECK/venv/bin/research" --workspace "$RELEASE_CHECK/workspace" doctor
+"$RELEASE_CHECK/venv/bin/research" --workspace "$RELEASE_CHECK/workspace" init demo
+"$RELEASE_CHECK/venv/bin/research" --workspace "$RELEASE_CHECK/workspace" status demo
+"$RELEASE_CHECK/venv/bin/research-evals"
+```
+
+GitHub Actions runs Python tests, baseline evaluation, wheel smoke checks, and
+TypeScript integration tests. Synthetic tests do not establish live provider
+compatibility or scientific performance. Report model-backed checks separately.
+
+Before a release, synchronize `pyproject.toml`, `VERSION`,
+`research_artifacts/__init__.py`, and the integration's package and lockfile
+versions. Review evaluation baseline changes as scientific-policy changes.

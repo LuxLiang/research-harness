@@ -55,7 +55,7 @@ class ScientificEvaluationTestCase(unittest.TestCase):
         self.assertEqual(covered, EXPECTED_SKILLS)
 
     def test_committed_regression_baseline_has_no_regression(self) -> None:
-        baseline = ROOT / "evals/baselines/step5-v0.1.json"
+        baseline = ROOT / "evals/baselines/v0.1.json"
         run = self.runner.run(baseline=baseline)
         self.assertTrue(run.passed)
         self.assertEqual(run.regression_errors, ())
