@@ -10,6 +10,10 @@ study, initialize an external workspace with
 `research --workspace /path/to/workspace workspace-init`. Use the Python API
 or the optional DeepSeek Harness integration there. The default Python CLI
 runtime is synthetic and must not be represented as real scientific execution.
+Use `research --workspace PATH doctor --runtime cordis` to check a configured
+host, then `research --workspace PATH run PROJECT --runtime cordis` for real
+model-backed execution. A successful doctor report does not verify model
+credentials. Never continue synthetic results as real research evidence.
 
 When changing framework code, preserve deterministic transition authority,
 revision-pinned evidence, and recoverable transactions. Follow

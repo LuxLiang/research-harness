@@ -37,7 +37,7 @@ export class ResearchOperatorServer {
   constructor(
     private readonly runtime: ResearchRuntime,
     socketPath: string,
-    workspace: string,
+    private readonly workspace: string,
   ) {
     const candidate = isAbsolute(socketPath) ? socketPath : resolve(workspace, socketPath)
     const root = resolve(workspace)
@@ -144,6 +144,13 @@ export class ResearchOperatorServer {
   }
 
   private async dispatch(method: string, params: Record<string, JsonValue>): Promise<unknown> {
+    if (method === 'health') {
+      return {
+        protocol: 'research-operator/v0.1',
+        runtime: 'cordis',
+        workspace: resolve(this.workspace),
+      }
+    }
     const projectId = string(params.project_id, 'project_id')
     switch (method) {
       case 'init': {

@@ -24,22 +24,26 @@ export RESEARCH_HARNESS_PROVIDER="openai-codex"
 dsh --profile web
 ```
 
-In a second terminal, export the same socket path and invoke the checked-in
-wrapper from the library checkout (or use its absolute path from any directory):
+In a second terminal, invoke the unified Python CLI from any directory:
 
 ```bash
-export RESEARCH_HARNESS_SOCKET="$HOME/research-workspaces/my-study/.harness/research/cordis.sock"
-./scripts/research-cordis init example --objective "Evaluate the proposed mechanism"
-./scripts/research-cordis run example --budget-percent 10
-./scripts/research-cordis status example
+export RESEARCH_HARNESS_WORKSPACE="$HOME/research-workspaces/my-study"
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" doctor --runtime cordis
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" init example --runtime cordis \
+  --objective "Evaluate the proposed mechanism"
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" run example --runtime cordis \
+  --budget-percent 10 --max-actions 2
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" status example --runtime cordis
 ```
 
 For proposal review:
 
 ```bash
-./scripts/research-cordis init proposal-example --mode proposal-review \
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" init proposal-example \
+  --runtime cordis --mode proposal-review \
   --proposal /path/to/proposal.md --objective "Review novelty and correctness"
-./scripts/research-cordis run proposal-example --budget-percent 10
+research --workspace "$RESEARCH_HARNESS_WORKSPACE" run proposal-example \
+  --runtime cordis --budget-percent 10
 ```
 
 The socket stays inside the data workspace. Input files and all research outputs
@@ -47,3 +51,18 @@ stay there too. Framework schemas and contracts are loaded from the installed
 Python package; skill presets are registered by the installer. Customize the
 workspace routing configuration to use models available to your provider.
 Git pushing is disabled by default; no remote is configured automatically.
+
+The Python client needs no Node installation of its own; the host still does.
+Rebuild and restart older hosts to enable the `research-operator/v0.1` health
+handshake. The client verifies that the host serves the selected workspace
+before sending a project command. Host connectivity does not verify provider
+authentication or model availability; `doctor` does not make a model call.
+
+The original `scripts/research-cordis --socket PATH ...` wrapper is still
+available. The unified `research` CLI preserves its earlier Python semantics:
+`resume`, `unblock`, and budget increases continue the run; the legacy wrapper's
+corresponding commands only perform the requested control operation.
+
+Set `--timeout SECONDS` on the Python CLI for longer actions. A timeout or client
+disconnect does not stop the host. Inspect status, or explicitly pause/cancel,
+before retrying a mutation. Failed requests never fall back to a synthetic run.

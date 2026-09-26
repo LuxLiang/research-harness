@@ -23,6 +23,7 @@ Create a new, empty workspace outside the checkout:
 
 ```bash
 research --workspace "$HOME/research-workspaces/example" workspace-init
+research --workspace "$HOME/research-workspaces/example" doctor
 research --workspace "$HOME/research-workspaces/example" init example \
   --objective "Evaluate a reproducible research workflow"
 research --workspace "$HOME/research-workspaces/example" status example
@@ -33,17 +34,48 @@ research --workspace "$HOME/research-workspaces/example" status example
 Scientific artifacts are stored under `projects/`; ephemeral execution state is
 stored under `.harness/` and excluded from Git.
 
-The Python CLI's `run` command uses a **synthetic runtime for deterministic
-integration testing**. It does not perform real model-backed research:
+By default, `run` uses a **synthetic runtime for deterministic integration
+testing** and prints that fact to stderr. It does not perform real model-backed
+research. You can also select it explicitly:
 
 ```bash
-research --workspace "$HOME/research-workspaces/example" run example --budget-percent 100
+research --workspace "$HOME/research-workspaces/example" run example \
+  --runtime synthetic --budget-percent 100 --max-actions 2
 ```
 
 For real model-backed research, use the optional
 [DeepSeek Harness integration](integrations/deepseek-harness/README.md), which
-provides `research-cordis` and an operator socket. The synthetic and production
-controllers must not run concurrently against the same project.
+provides a model-backed host and an operator socket. Once the host is running,
+the same installed Python CLI can control it directly:
+
+```bash
+research --workspace "$HOME/research-workspaces/example" doctor --runtime cordis
+research --workspace "$HOME/research-workspaces/example" run example \
+  --runtime cordis --budget-percent 10 --max-actions 2
+research --workspace "$HOME/research-workspaces/example" status example --runtime cordis
+```
+
+Use a fresh project for real research; do not use a project already populated
+by synthetic execution. The synthetic and production controllers must not run
+concurrently against the same project. The CLI refuses synthetic mutations when
+the configured operator socket path exists. All project commands accept
+`--runtime cordis`; the existing `research-cordis` wrapper remains supported.
+
+`doctor` emits JSON and exits with code 0 when checks pass, or 2 when a check
+fails. It checks Python, the independent Git workspace and commit identity,
+framework resources, routing configuration, and (for Cordis) the host protocol
+and workspace identity. It is read-only and **does not test model credentials
+or inference**. Selecting Cordis never silently falls back to synthetic work.
+
+`--socket PATH` overrides `RESEARCH_HARNESS_SOCKET`, which overrides the default
+`WORKSPACE/.harness/research/cordis.sock`. Relative socket paths resolve inside
+the selected workspace. `--timeout SECONDS` bounds operator responses (default
+3600 seconds). A timeout does not cancel the host; inspect `status` before
+retrying. Requests are not automatically replayed after connection failures.
+
+`--budget-percent` is a framework estimate, not a provider quota or monetary
+spending cap. Noninteractive runs without a required budget return the
+controller's budget-wait state instead of prompting on stdin.
 
 Available workflows are `full-research` and `proposal-review`. The former accepts
 repeatable `--source-material` inputs; the latter accepts `--proposal` and an

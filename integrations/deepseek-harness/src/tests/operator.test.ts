@@ -1,5 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { execFile } from 'node:child_process'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { promisify } from 'node:util'
 import type {
   ActionResult,
   JsonValue,
@@ -50,6 +56,37 @@ class RuntimeStub implements ResearchRuntime {
     this.calls.push({ method: 'record-event', args: [projectId, type, payload] })
   }
 }
+
+test('operator health identifies workspace without executing a research action', async () => {
+  const runtime = new RuntimeStub()
+  const server = new ResearchOperatorServer(runtime, 'operator.sock', '/tmp/research-health')
+  const response = await server.dispatchLine(JSON.stringify({ id: 'health-1', method: 'health', params: {} }))
+  assert.deepEqual(response, {
+    id: 'health-1', ok: true,
+    result: { protocol: 'research-operator/v0.1', runtime: 'cordis', workspace: '/tmp/research-health' },
+  })
+  assert.deepEqual(runtime.calls, [])
+})
+
+test('Python CLI interoperates with the Node operator over a real socket', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'rh-bridge-'))
+  const runtime = new RuntimeStub()
+  const server = new ResearchOperatorServer(runtime, 'operator.sock', root)
+  try {
+    await server.start()
+    const { stdout } = await promisify(execFile)(
+      process.env.RESEARCH_HARNESS_TEST_PYTHON ?? 'python3',
+      ['-m', 'research_artifacts.mvp_cli', '--workspace', root,
+       '--runtime', 'cordis', '--socket', server.socketPath, 'status', 'example'],
+      { cwd: fileURLToPath(new URL('../../../../', import.meta.url)), timeout: 15000 },
+    )
+    assert.equal(JSON.parse(stdout).checkpoint.state, 'DONE')
+    assert.deepEqual(runtime.calls, [{ method: 'status', args: ['proj-example'] }])
+  } finally {
+    await server.dispose()
+    await rm(root, { recursive: true, force: true })
+  }
+})
 
 test('proposal states have deterministic production controller mappings', () => {
   assert.equal(DIRECT_EVENTS.PROPOSAL_STRUCTURING, 'PROPOSAL_STRUCTURED')

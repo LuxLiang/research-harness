@@ -11,6 +11,11 @@ Run `python -m unittest discover -s tests -p 'test_*.py'` and `research-evals`.
 For integration changes, run `npm ci`, `npm run build`, and `npm test` inside
 `integrations/deepseek-harness/`.
 
+The operator tests bind temporary Unix sockets and require a POSIX environment
+that permits local sockets. They use stub controllers, not real models. Node
+tests also exercise the Python-to-Node bridge; install the Python package first,
+and set `RESEARCH_HARNESS_TEST_PYTHON` if the test interpreter is not `python3`.
+
 Canonical schemas, skill contracts, presets, routing defaults, and evaluation
 cases remain in their top-level source directories. The package build copies
 these into `research_artifacts/_data/`. Do not edit generated build directories.

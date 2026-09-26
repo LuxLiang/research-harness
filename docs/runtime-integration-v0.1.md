@@ -174,9 +174,18 @@ second runtime stack.
 `operatorSocket` enables the host-only JSONL operator bridge. It accepts
 init/status/run and human-control commands, plus proposal decisions, approval,
 and conversion. The POSIX socket must resolve inside `workspace`, is created
-with mode `0600`, rejects requests over 1 MiB, and refuses to overwrite a stale
-filesystem entry. It is not exposed as a model tool. The supported client is
-`scripts/research-cordis`; `RESEARCH_HARNESS_SOCKET` supplies its default path.
+with mode `0600`, rejects requests over 1 MB, and refuses to overwrite a stale
+filesystem entry. It is not exposed as a model tool. The installed Python CLI
+supports `research --workspace PATH COMMAND --runtime cordis`; the existing
+`scripts/research-cordis` client remains available.
+
+The Python client first sends `health` with empty parameters and verifies the
+`research-operator/v0.1` protocol, `cordis` runtime, and workspace identity.
+Health does not call the scientific runtime or test model credentials. Client
+requests carry unique IDs; responses must carry the matching ID. Transport
+failures are never automatically retried or routed to synthetic execution.
+`research --workspace PATH doctor --runtime cordis` performs this handshake and
+checks local framework resources without executing a research action.
 
 Proposal initialization sends `workflowMode: PROPOSAL_REVIEW` and absolute
 proposal/rubric paths through the same controller and sidecar. The controller
