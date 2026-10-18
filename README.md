@@ -1,5 +1,9 @@
 # Research Harness
 
+![Illustrative research workflow: question, research, independent verification, revision, and human approval.](docs/assets/research-workflow.png)
+
+[Static illustration](docs/assets/research-workflow-still.png) · [Local HTML preview source](docs/assets/workflow-preview.html)
+
 A framework for running scientific workflows with structured evidence,
 independent reviews, and recoverable Git history. Keep research data in a
 separate workspace; install this repository as a reusable library.
