@@ -51,6 +51,7 @@ class PilotDefinition:
     literature: Mapping[str, Any]
     claim_statement: str | None = None
     lean_source: str | None = None
+    lean_theorem: str | None = None
     informal_proof: str | None = None
 
 
@@ -89,6 +90,7 @@ PILOTS: dict[str, PilotDefinition] = {
             "Let m=(x+y)/2. Then x-m=(x-y)/2 and y-m=(y-x)/2. "
             "Squaring and adding gives two copies of (x-y)^2/4, hence (x-y)^2/2."
         ),
+        lean_theorem="two_point_variance_identity",
         lean_source="""import Mathlib
 
 theorem two_point_variance_identity (x y : ℝ) :
@@ -154,6 +156,7 @@ theorem two_point_variance_identity (x y : ℝ) :
             "The two summands are equal by commutativity. Factoring p(1-p) gives "
             "p(1-p)(1/2+1/2)=p(1-p)."
         ),
+        lean_theorem="bernoulli_two_sample_variance_identity",
         lean_source="""import Mathlib
 
 theorem bernoulli_two_sample_variance_identity (p : ℝ) :
@@ -549,6 +552,7 @@ class GoldenPilotRuntime(SyntheticSkillRuntime):
         source = self._resource(action["project_id"], "lean/GoldenPilot.lean", str(self.definition.lean_source), "Lean theorem source", "text/plain")
         mapping_value = {
             "claim_id": claim["id"], "claim_revision": claim["revision"],
+            "target_theorems": {"GoldenPilot.lean": [self.definition.lean_theorem]},
             "assumptions": "No additional assumptions; variables and real-number domain match.",
             "quantifiers": "Scientific 'for all' maps to explicit Lean parameters.",
             "conclusion": "The equality is syntactically equivalent after expanding m in the theory pilot and exactly identical in the mixed pilot.",
@@ -578,9 +582,10 @@ class GoldenPilotRuntime(SyntheticSkillRuntime):
         scratch_report = self.lean_project / f"{action['action_id']}-report.json"
         result = LeanToolAdapter().verify(
             project_dir=self.lean_project, source_paths=[scratch_source],
+            target_theorems={"GoldenPilot.lean": [str(self.definition.lean_theorem)]},
             lean_version=LEAN_VERSION, mathlib_commit=MATHLIB_COMMIT,
             report_path=scratch_report,
-            build_command=("lake", "env", "lean", "GoldenPilot.lean"), timeout=600,
+            build_command=None, timeout=600,
         )
         atomic_write_text(report_target, scratch_report.read_text(encoding="utf-8"))
         resource = {"uri": str(report_target.relative_to(self.root)), "sha256": hashlib.sha256(report_target.read_bytes()).hexdigest(), "media_type": "application/json", "description": "Clean Lean build and axiom audit report"}

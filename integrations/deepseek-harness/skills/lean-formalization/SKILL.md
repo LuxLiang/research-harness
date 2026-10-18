@@ -39,9 +39,10 @@ Faithfully map a frozen ScientificClaim and informal proof into Lean.
 
 ## Procedure
 
-1. Map assumptions, quantifiers, domains, constants, and conclusion bidirectionally before coding.
-2. Write a theorem that preserves the mapping without strengthening assumptions or weakening conclusions.
-3. Record every ambiguous or unavailable mapping instead of silently changing semantics.
+1. Record target_theorems in the semantic mapping as source paths mapped to nonempty lists of fully qualified Lean theorem names for independent verification.
+2. Map assumptions, quantifiers, domains, constants, and conclusion bidirectionally before coding.
+3. Write a theorem that preserves the mapping without strengthening assumptions or weakening conclusions.
+4. Record every ambiguous or unavailable mapping instead of silently changing semantics.
 
 ## Completion Conditions
 

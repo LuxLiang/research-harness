@@ -5,6 +5,7 @@ inputs: [Frozen ScientificClaim revision, Informal proof, Dependency Claims, Lea
 outputs: [Lean source resource, Assumption and conclusion mapping, Verification-resource-only Claim revision]
 tools: [research_artifact_read, research_artifact_resolve, resource_write, lean, lake, research_artifact_validate, research_artifact_propose, research_action_submit]
 procedure:
+  - Record target_theorems in the semantic mapping as source paths mapped to nonempty lists of fully qualified Lean theorem names for independent verification.
   - Map assumptions, quantifiers, domains, constants, and conclusion bidirectionally before coding.
   - Write a theorem that preserves the mapping without strengthening assumptions or weakening conclusions.
   - Record every ambiguous or unavailable mapping instead of silently changing semantics.

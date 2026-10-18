@@ -17,6 +17,7 @@ from .runtime_types import RuntimeValidationError, atomic_write_json, sha256_jso
 
 
 Runner = Callable[..., subprocess.CompletedProcess[str]]
+_LEAN_RAW_STRING = re.compile(r'r(#+)?"')
 
 
 @dataclass(frozen=True)
@@ -29,8 +30,64 @@ class LeanResult:
     report_sha256: str
 
 
+def _lean_code(source: str) -> str:
+    """Mask comments and literals, preserving newlines for conservative scans.
+
+    Lean block comments nest. Strings (including raw strings) and quoted names
+    must not turn their contents into apparent comments or forbidden tokens.
+    This is only a supplemental scan; compiled target axiom reports are required.
+    """
+    result = list(source)
+    index = 0
+    while index < len(source):
+        start = index
+        if source.startswith('--', index):
+            end = source.find('\n', index)
+            index = len(source) if end < 0 else end
+        elif source.startswith('/-', index):
+            depth = 1
+            index += 2
+            while index < len(source) and depth:
+                if source.startswith('/-', index):
+                    depth += 1
+                    index += 2
+                elif source.startswith('-/', index):
+                    depth -= 1
+                    index += 2
+                else:
+                    index += 1
+        elif (raw := _LEAN_RAW_STRING.match(source, index)) is not None:
+            closing = '"' + (raw.group(1) or '')
+            end = source.find(closing, raw.end())
+            index = len(source) if end < 0 else end + len(closing)
+        elif source[index] == '"':
+            index += 1
+            while index < len(source):
+                if source[index] == '\\':
+                    index += 2
+                elif source[index] == '"':
+                    index += 1
+                    break
+                else:
+                    index += 1
+        elif source[index] == '«':
+            end = source.find('»', index + 1)
+            index = len(source) if end < 0 else end + 1
+        else:
+            index += 1
+            continue
+        for position in range(start, min(index, len(source))):
+            if result[position] != '\n':
+                result[position] = ' '
+    return ''.join(result)
+
+
 class LeanToolAdapter:
-    """Run pinned Lean checks; an agent's prose can never manufacture PASS."""
+    """Compile exact source snapshots and audit explicitly named targets.
+
+    The runner/compiler is trusted execution infrastructure. Version parameters
+    remain provenance labels; this adapter does not attest the toolchain itself.
+    """
 
     def __init__(self, runner: Runner = subprocess.run):
         self.runner = runner
@@ -40,16 +97,47 @@ class LeanToolAdapter:
         *,
         project_dir: str | Path,
         source_paths: Sequence[str | Path],
+        target_theorems: Mapping[str, Sequence[str]],
         lean_version: str,
         mathlib_commit: str,
         allowed_axioms: Sequence[str] = ("propext", "Classical.choice", "Quot.sound"),
         report_path: str | Path,
-        build_command: Sequence[str] = ("lake", "build"),
+        build_command: Sequence[str] | None = ("lake", "build"),
+        lean_command: Sequence[str] = ("lake", "env", "lean"),
         stronger_checker: Sequence[str] | None = None,
         timeout: int = 300,
     ) -> LeanResult:
         root = Path(project_dir).resolve()
+        if not source_paths:
+            raise RuntimeValidationError("Lean verification requires nonempty source_paths")
+        # Only compiler invocations are accepted here, never arbitrary shell
+        # commands. A custom build is preparatory and cannot establish PASS.
+        compiler = list(lean_command)
+        if not (
+            (len(compiler) == 1 and Path(compiler[0]).name == 'lean')
+            or (len(compiler) == 3 and Path(compiler[0]).name == 'lake'
+                and compiler[1:] == ['env', 'lean'])
+        ):
+            raise RuntimeValidationError("lean_command must invoke lean or lake env lean")
         sources = [(root / path).resolve() if not Path(path).is_absolute() else Path(path).resolve() for path in source_paths]
+        if len(set(sources)) != len(sources):
+            raise RuntimeValidationError("Duplicate Lean source paths")
+        targets: dict[Path, list[str]] = {}
+        for path, names in target_theorems.items():
+            source = (root / path).resolve()
+            if source in targets or isinstance(names, str) or not names:
+                raise RuntimeValidationError("Each Lean source requires a nonempty target list")
+            names = list(names)
+            if len(set(names)) != len(names) or any(
+                not isinstance(name, str) or not re.fullmatch(r"[^\W\d][\w']*(?:\.[^\W\d][\w']*)*", name)
+                for name in names
+            ):
+                raise RuntimeValidationError("Lean targets must be distinct qualified identifiers")
+            targets[source] = names
+        if set(targets) != set(sources):
+            raise RuntimeValidationError("target_theorems must cover exactly the supplied Lean sources")
+        if Path(report_path).resolve() in sources:
+            raise RuntimeValidationError("Lean report must not overwrite a supplied source")
         for source in sources:
             if root not in source.parents and source != root:
                 raise RuntimeValidationError("Lean source escapes the pinned project directory")
@@ -58,9 +146,12 @@ class LeanToolAdapter:
         findings: list[str] = []
         declared_axioms: set[str] = set()
         source_hashes: dict[str, str] = {}
+        snapshots: dict[Path, str] = {}
         for source in sources:
-            content = source.read_text(encoding="utf-8")
-            source_hashes[str(source.relative_to(root))] = hashlib.sha256(content.encode()).hexdigest()
+            raw = source.read_bytes()
+            snapshots[source] = raw.decode('utf-8')
+            content = _lean_code(snapshots[source])
+            source_hashes[str(source.relative_to(root))] = hashlib.sha256(raw).hexdigest()
             if re.search(r"\bsorryAx\b", content):
                 findings.append("SORRY_AX_FOUND")
             if re.search(r"\bsorry\b", content):
@@ -72,29 +163,64 @@ class LeanToolAdapter:
         unapproved = sorted(declared_axioms - set(allowed_axioms))
         findings.extend(f"UNAPPROVED_AXIOM:{item}" for item in unapproved)
         build_failure: str | None = None
-        try:
-            build = self.runner(
-                list(build_command), cwd=root, text=True, capture_output=True,
-                check=False, timeout=timeout,
-            )
-        except subprocess.TimeoutExpired as exc:
-            build_failure = "TOOL_TIMEOUT"
-            build = subprocess.CompletedProcess(
-                list(build_command), 124,
-                stdout=str(exc.stdout or ""), stderr=str(exc.stderr or "Lean build timed out"),
-            )
-        except OSError as exc:
-            build_failure = "TOOL_UNAVAILABLE"
-            build = subprocess.CompletedProcess(
-                list(build_command), 127, stdout="", stderr=str(exc),
-            )
-        build_passed = build.returncode == 0
+
+        def run(command: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+            nonlocal build_failure
+            try:
+                return self.runner(list(command), cwd=root, text=True,
+                                   capture_output=True, check=False, timeout=timeout, **kwargs)
+            except subprocess.TimeoutExpired as exc:
+                build_failure = "TOOL_TIMEOUT"
+                def decoded(value: str | bytes | None) -> str:
+                    return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else value or ''
+                return subprocess.CompletedProcess(list(command), 124, decoded(exc.stdout),
+                                                   decoded(exc.stderr) or "Lean check timed out")
+            except OSError as exc:
+                build_failure = "TOOL_UNAVAILABLE"
+                return subprocess.CompletedProcess(list(command), 127, '', str(exc))
+
+        build = run(build_command) if build_command else subprocess.CompletedProcess([], 0, '', '')
+        source_checks: list[dict[str, Any]] = []
+        target_axioms: dict[str, dict[str, list[str]]] = {}
+        if build.returncode == 0:
+            for source in sources:
+                relative = str(source.relative_to(root))
+                audit_commands = ''.join(f'\n#print axioms _root_.{name}\n' for name in targets[source])
+                checked = run([*compiler, '--stdin'], input=snapshots[source] + '\n' + audit_commands)
+                source_checks.append({
+                    'source': relative, 'source_sha256': source_hashes[relative],
+                    'command': [*compiler, '--stdin'], 'returncode': checked.returncode,
+                    'stdout': checked.stdout, 'stderr': checked.stderr,
+                })
+                audits: dict[str, list[str]] = {}
+                for match in re.finditer(
+                    r"(?m)^'([^\n]+)' (?:depends on axioms:\s*\[([^\]]*)\]|does not depend on any axioms)\s*$",
+                    checked.stdout + '\n' + checked.stderr,
+                ):
+                    name = match.group(1)
+                    axioms = [item.strip() for item in (match.group(2) or '').split(',') if item.strip()]
+                    # Union duplicate reports so a later empty report cannot hide
+                    # forbidden dependencies printed by the actual compiler.
+                    audits[name] = sorted(set(audits.get(name, [])) | set(axioms))
+                target_axioms[relative] = {name: audits[name] for name in targets[source] if name in audits}
+                if checked.returncode == 0:
+                    findings.extend(f'AXIOM_AUDIT_MISSING:{name}' for name in targets[source] if name not in audits)
+        build_passed = build.returncode == 0 and len(source_checks) == len(sources) and all(check['returncode'] == 0 for check in source_checks)
         if not build_passed:
             findings.append(build_failure or "LEAN_BUILD_FAILED")
-        combined_output = f"{build.stdout}\n{build.stderr}"
+        combined_output = '\n'.join([build.stdout, build.stderr, *(
+            check['stdout'] + '\n' + check['stderr'] for check in source_checks
+        )])
         reported_axioms: set[str] = set()
+        # Failed elaboration can introduce recovery sorryAx terms. Preserve its
+        # diagnostics, but classify it as a build failure rather than an axiom
+        # violation unless a source scan or successful compilation establishes one.
+        audit_output = '\n'.join(
+            check['stdout'] + '\n' + check['stderr']
+            for check in source_checks if check['returncode'] == 0
+        )
         for match in re.finditer(
-            r"depends on axioms:\s*\[([^\]]*)\]", combined_output
+            r"depends on axioms:\s*\[([^\]]*)\]", audit_output
         ):
             reported_axioms.update(
                 item.strip()
@@ -105,17 +231,21 @@ class LeanToolAdapter:
         findings.extend(
             f"UNAPPROVED_AXIOM:{item}" for item in unapproved_reported
         )
+        if 'sorryAx' in reported_axioms:
+            findings.append('SORRY_AX_FOUND')
         stronger = None
         if stronger_checker and build_passed and not findings:
-            stronger = self.runner(
-                list(stronger_checker), cwd=root, text=True, capture_output=True,
-                check=False, timeout=timeout,
-            )
+            stronger = run(stronger_checker)
             if stronger.returncode != 0:
                 findings.append("STRONGER_CHECK_FAILED")
-        audit_passed = not any(
-            item.startswith(("SORRY", "UNAPPROVED_AXIOM")) for item in findings
-        )
+        for source in sources:
+            try:
+                unchanged = hashlib.sha256(source.read_bytes()).hexdigest() == source_hashes[str(source.relative_to(root))]
+            except OSError:
+                unchanged = False
+            if not unchanged:
+                findings.append(f'SOURCE_CHANGED:{source.relative_to(root)}')
+        audit_passed = build_passed and not findings
         if any(item.startswith("SORRY") for item in findings):
             outcome = "SORRY_FOUND"
         elif unapproved or unapproved_reported:
@@ -123,27 +253,35 @@ class LeanToolAdapter:
         elif build_failure is not None:
             outcome = build_failure
         elif not build_passed:
-            combined = f"{build.stdout}\n{build.stderr}".lower()
+            combined = combined_output.lower()
             if any(word in combined for word in ("unknown module", "package", "dependency", "no such file")):
                 outcome = "LIBRARY_GAP"
             elif any(word in combined for word in ("unexpected token", "parser", "invalid syntax")):
                 outcome = "FORMALIZATION_GAP"
             else:
                 outcome = "LEAN_PROOF_GAP"
+        elif any(item.startswith('AXIOM_AUDIT_MISSING:') for item in findings):
+            outcome = 'AXIOM_AUDIT_MISSING'
+        elif any(item.startswith('SOURCE_CHANGED:') for item in findings):
+            outcome = 'SOURCE_CHANGED'
         elif stronger is not None and stronger.returncode != 0:
             outcome = "LEAN_PROOF_GAP"
         else:
             outcome = "PASS"
         report = {
-            "adapter_version": "research-lean-tool/v0.1",
+            "adapter_version": "research-lean-tool/v0.2",
             "outcome": outcome,
             "lean_version": lean_version,
             "mathlib_commit": mathlib_commit,
             "source_hashes": source_hashes,
-            "build_command": list(build_command),
-            "build_returncode": build.returncode,
-            "build_stdout": build.stdout,
-            "build_stderr": build.stderr,
+            "build_command": list(build_command) if build_command else None,
+            "lean_command": compiler,
+            "target_theorems": {str(source.relative_to(root)): targets[source] for source in sources},
+            "target_axioms": target_axioms,
+            "source_checks": source_checks,
+            "build_returncode": build.returncode or next((check['returncode'] for check in source_checks if check['returncode']), 0),
+            "build_stdout": '\n'.join([build.stdout, *(check['stdout'] for check in source_checks)]),
+            "build_stderr": '\n'.join([build.stderr, *(check['stderr'] for check in source_checks)]),
             "declared_axioms": sorted(declared_axioms),
             "reported_axioms": sorted(reported_axioms),
             "allowed_axioms": sorted(set(allowed_axioms)),

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { Context, Service } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
 import { researchSessionId } from '../session-id.js'
-import { assertGateAssessmentAllowed, assertProposalWriteAllowed, RESEARCH_TOOL_NAMES } from '../tools.js'
+import { assertGateAssessmentAllowed, assertProposalWriteAllowed, registerResearchTools, RESEARCH_TOOL_NAMES } from '../tools.js'
 import { PRESET_POLICY, ROLE_SKILLS } from '../roles.js'
 import {
   gateSubmissionInstruction,
@@ -63,6 +63,36 @@ test('model tool registry excludes canonical promotion and transitions', () => {
   ])
   assert.equal(RESEARCH_TOOL_NAMES.some(name => name.includes('promote')), false)
   assert.equal(RESEARCH_TOOL_NAMES.some(name => name.includes('transition')), false)
+})
+
+test('Lean verification forwards source-to-theorem mapping and rejects non-object JSON', async () => {
+  const definitions: any[] = []
+  const calls: Array<{ method: string; params: Record<string, unknown> }> = []
+  registerResearchTools({
+    tools: { register: (definition: unknown) => definitions.push(definition) },
+  } as unknown as Context, {
+    async call(method: string, params: Record<string, unknown>) {
+      calls.push({ method, params })
+      return {}
+    },
+  } as never, {
+    projectId: 'proj-demo', actionId: 'action-lean', bundleSha256: 'a'.repeat(64),
+    proposerSessionId: 'reviewer', allowedTools: ['research_lean_verify'],
+    allowGateAssessment: false, proposalWritePolicy: 'DENY',
+  })
+  const tool = definitions[0]
+  const args = {
+    project_dir: '/tmp/formal', source_paths_json: '["Main.lean"]',
+    target_theorems_json: '{"Main.lean":["Result.main"]}',
+    lean_version: '4.19.0', mathlib_commit: 'b'.repeat(40),
+    allowed_axioms_json: '[]', report_path: '/tmp/formal/report.json',
+  }
+  const exec = { signal: new AbortController().signal }
+  await tool.execute(args, exec)
+  assert.equal(calls[0].method, 'tool.lean_verify')
+  assert.deepEqual(calls[0].params.target_theorems, { 'Main.lean': ['Result.main'] })
+  await assert.rejects(tool.execute({ ...args, target_theorems_json: '[]' }, exec), /object/)
+  assert.equal(calls.length, 1)
 })
 
 test('MVP roles and write-capability presets are closed registries', () => {

@@ -395,7 +395,7 @@ class HardeningTestCase(unittest.TestCase):
         with tempfile.TemporaryDirectory() as value:
             root = Path(value); source = root / "Main.lean"; source.write_text("theorem x : True := by trivial\n")
             adapter = LeanToolAdapter(lambda *a, **k: (_ for _ in ()).throw(subprocess.TimeoutExpired(a[0], 1)))
-            result = adapter.verify(project_dir=root, source_paths=[source], lean_version="4.19.0", mathlib_commit="a" * 40, report_path=root / "report.json")
+            result = adapter.verify(project_dir=root, source_paths=[source], target_theorems={"Main.lean": ["x"]}, lean_version="4.19.0", mathlib_commit="a" * 40, report_path=root / "report.json")
             self.assertEqual(result.outcome, "TOOL_TIMEOUT")
             self.assertFalse(result.build_passed)
 
@@ -406,8 +406,8 @@ class HardeningTestCase(unittest.TestCase):
                 return subprocess.CompletedProcess(["lake", "build"], 1, stdout="", stderr=stderr)
             syntax = LeanToolAdapter(lambda *a, **k: result("unexpected token"))
             library = LeanToolAdapter(lambda *a, **k: result("unknown module Mathlib.X"))
-            self.assertEqual(syntax.verify(project_dir=root, source_paths=[source], lean_version="4", mathlib_commit="a" * 40, report_path=root / "syntax.json").outcome, "FORMALIZATION_GAP")
-            self.assertEqual(library.verify(project_dir=root, source_paths=[source], lean_version="4", mathlib_commit="a" * 40, report_path=root / "library.json").outcome, "LIBRARY_GAP")
+            self.assertEqual(syntax.verify(project_dir=root, source_paths=[source], target_theorems={"Main.lean": ["x"]}, lean_version="4", mathlib_commit="a" * 40, report_path=root / "syntax.json").outcome, "FORMALIZATION_GAP")
+            self.assertEqual(library.verify(project_dir=root, source_paths=[source], target_theorems={"Main.lean": ["x"]}, lean_version="4", mathlib_commit="a" * 40, report_path=root / "library.json").outcome, "LIBRARY_GAP")
 
     def test_experiment_timeout_records_failed_raw_run(self) -> None:
         with tempfile.TemporaryDirectory() as value:

@@ -755,9 +755,13 @@ class SyntheticSkillRuntime:
         source = lean_dir / "Core.lean"; source.write_text("theorem core (p : Prop) (h : p) : p := h\n", encoding="utf-8")
         class SuccessRunner:
             def __call__(self, *args, **kwargs):
-                return subprocess.CompletedProcess(args[0], 0, "build ok", "")
+                return subprocess.CompletedProcess(args[0], 0, "'core' does not depend on any axioms\n", "")
         report = lean_dir / f"{action['action_id']}-report.json"
-        result = LeanToolAdapter(SuccessRunner()).verify(project_dir=lean_dir, source_paths=[source], lean_version="4.19.0", mathlib_commit="a"*40, report_path=report)
+        result = LeanToolAdapter(SuccessRunner()).verify(
+            project_dir=lean_dir, source_paths=[source],
+            target_theorems={"Core.lean": ["core"]}, lean_version="4.19.0",
+            mathlib_commit="a"*40, report_path=report, build_command=None,
+        )
         if result.outcome != "PASS":
             raise RuntimeValidationError(f"synthetic Lean adapter failed: {result.outcome}")
         resource = {

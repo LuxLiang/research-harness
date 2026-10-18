@@ -29,6 +29,24 @@ jobs:
           "$RUNNER_TEMP/wheel-env/bin/research" --workspace "$RUNNER_TEMP/data-workspace" init example
           "$RUNNER_TEMP/wheel-env/bin/research" --workspace "$RUNNER_TEMP/data-workspace" status example
           "$RUNNER_TEMP/wheel-env/bin/research-evals"
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install .
+      - name: Install fixed Lean compiler for core regressions
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 -o "$RUNNER_TEMP/lean.tar.zst" \
+            https://github.com/leanprover/lean4/releases/download/v4.19.0/lean-4.19.0-linux.tar.zst
+          tar --zstd -xf "$RUNNER_TEMP/lean.tar.zst" -C "$RUNNER_TEMP"
+      - name: Run real Lean verification regressions
+        env:
+          RESEARCH_HARNESS_TEST_LEAN: ${{ runner.temp }}/lean-4.19.0-linux/bin/lean
+        run: python -m unittest tests.test_lean_verification
   integration:
     runs-on: ubuntu-latest
     defaults:

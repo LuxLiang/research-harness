@@ -76,13 +76,19 @@ claim verified. Other outputs can use different profiles in the same plan.
 
 Lean is a separate dependency: provide Lean/Lake and an appropriate mathlib
 project. The [adapter](research_artifacts/tool_adapters.py) runs a build
-(`lake build` by default), scans supplied sources for `sorry`, `sorryAx`, and
-unapproved axiom declarations, reads reported axiom dependencies, and records
-logs and source hashes. A stronger external checker can also be supplied.
+(`lake build` by default), then compiles the exact supplied source snapshots
+through `lake env lean --stdin`. Callers must provide `target_theorems`, a
+mapping from each source path to its nonempty list of qualified theorem names.
+The adapter appends `#print axioms` for every target and rejects missing audits,
+`sorry`/`sorryAx`, unapproved axioms, and source changes during verification.
+Supplemental scans ignore comments and string literals. Reports record source
+hashes, per-source compiler results, and per-target axiom dependencies. A
+stronger external checker can also be supplied; tool failures leave a report.
 **Current limitation:** the generic adapter does not itself verify the supplied
-Lean/mathlib version labels or force an axiom-dependency report for every
-target theorem. The execution setup must enforce those checks; a successful
-build alone is not the complete formal-verification workflow.
+Lean/mathlib version labels or establish that the supplied targets express the
+intended scientific claim. The execution setup must pin the environment, and
+the independent semantic-alignment review remains required. The compiler and
+runner must be trusted execution infrastructure.
 
 ### Proposal review
 

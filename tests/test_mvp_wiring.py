@@ -275,6 +275,7 @@ class DeterministicToolAdapterTestCase(unittest.TestCase):
 
             result = LeanToolAdapter(SuccessRunner()).verify(
                 project_dir=root, source_paths=[source], lean_version="4.19.0",
+                target_theorems={"Bad.lean": ["bad"]},
                 mathlib_commit="a" * 40, allowed_axioms=[], report_path=root / "report.json",
             )
             self.assertNotEqual(result.outcome, "PASS")
@@ -291,12 +292,13 @@ class DeterministicToolAdapterTestCase(unittest.TestCase):
                 def __call__(self, *args, **kwargs):
                     return subprocess.CompletedProcess(
                         args[0], 0,
-                        "reported depends on axioms: [Classical.choice, forbidden.extra]\n",
+                        "'reported' depends on axioms: [Classical.choice, forbidden.extra]\n",
                         "",
                     )
 
             result = LeanToolAdapter(ReportingRunner()).verify(
                 project_dir=root, source_paths=[source], lean_version="4.19.0",
+                target_theorems={"Reported.lean": ["reported"]},
                 mathlib_commit="a" * 40,
                 allowed_axioms=["Classical.choice"], report_path=root / "report.json",
             )

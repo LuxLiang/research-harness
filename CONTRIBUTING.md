@@ -29,6 +29,16 @@ Operator tests use stub controllers and local sockets, not real models. Node
 tests also exercise the Python bridge; set `RESEARCH_HARNESS_TEST_PYTHON` to the
 installed Python interpreter if it is not available as `python3`.
 
+For changes to Lean verification, also run the real compiler regressions with
+a locally installed Lean binary (these use core Lean, without mathlib or a model):
+
+```bash
+RESEARCH_HARNESS_TEST_LEAN=/path/to/lean python -m unittest tests.test_lean_verification
+```
+
+The real compiler cases skip when neither this variable nor `lean` on `PATH`
+is available. Report skipped cases separately from completed compiler checks.
+
 Preserve deterministic transitions, revision-pinned evidence, independent
 verification, and recoverable transactions. Keep canonical resources in
 `schemas/`, `config/`, `evals/`, and the integration's `skills/` and `presets/`.

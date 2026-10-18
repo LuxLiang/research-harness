@@ -309,10 +309,11 @@ export function registerResearchTools(ctx: Context, sidecar: SidecarClient, scop
   }))
   register(defineTool({
     name: 'research_lean_verify',
-    description: 'Run deterministic pinned Lean build and axiom checks. Only this result can establish Lean PASS.',
+    description: 'Compile supplied Lean sources and audit every named target. Version labels require a separately pinned environment.',
     parameters: {
       project_dir: { type: 'string', required: true },
       source_paths_json: { type: 'string', required: true },
+      target_theorems_json: { type: 'string', required: true },
       lean_version: { type: 'string', required: true },
       mathlib_commit: { type: 'string', required: true },
       allowed_axioms_json: { type: 'string', required: true },
@@ -322,6 +323,7 @@ export function registerResearchTools(ctx: Context, sidecar: SidecarClient, scop
     execute: async (args: any, exec) => sidecar.call('tool.lean_verify', {
       project_dir: args.project_dir,
       source_paths: parseJsonArray(args.source_paths_json, 'source_paths_json'),
+      target_theorems: parseJsonObject(args.target_theorems_json, 'target_theorems_json'),
       lean_version: args.lean_version,
       mathlib_commit: args.mathlib_commit,
       allowed_axioms: parseJsonArray(args.allowed_axioms_json, 'allowed_axioms_json'),
