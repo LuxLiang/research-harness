@@ -87,6 +87,8 @@ class HardeningTestCase(unittest.TestCase):
     def _experiment(self, directory: Path) -> dict:
         dataset = directory / "dataset.json"
         dataset.write_text("{\"values\":[1,2,3]}\n", encoding="utf-8")
+        from tests.git_helpers import committed_code
+        commit = committed_code(directory)
         experiment = {
             "id": "exp-hardening",
             "revision": 2,
@@ -97,7 +99,7 @@ class HardeningTestCase(unittest.TestCase):
             "metrics": [{"name": "m", "definition": "fixed", "direction": "HIGHER_BETTER", "aggregation": "mean"}],
             "configuration": {"parameters": {}, "environment": "test-env"},
             "interpretation_plan": {"supported_when": ["m>0"], "contradicted_when": ["m<0"], "inconclusive_when": ["m=0"], "analysis_plan": "fixed", "seeds": [7], "repetitions": 1, "hyperparameter_budget": "none", "ablations": [], "statistical_procedure": "fixed", "exclusions": []},
-            "code_location": {"repository": str(directory), "git_commit": "a" * 40, "entrypoint": "/bin/true"},
+            "code_location": {"repository": str(directory), "git_commit": commit, "entrypoint": "/bin/true"},
             "runs": [],
         }
         experiment["protocol_lock"] = {

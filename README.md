@@ -90,6 +90,15 @@ intended scientific claim. The execution setup must pin the environment, and
 the independent semantic-alignment review remains required. The compiler and
 runner must be trusted execution infrastructure.
 
+Accepting a formal `PASS` also requires the report and a host execution receipt
+returned by `research_lean_verify`. The controller checks the actual result,
+per-source compilations, per-theorem axioms, pinned Claim inputs, and action/session
+identity. Copy both `evidence_resources` references returned by the tool into each
+formal Review. Pinned Lean resources must have unique filenames so each mapped
+source can be bound to exactly one resource hash. Existing formal Reviews without these receipts require a new
+verification run. Receipts are committed with their reports for Git recovery;
+they rely on the host's filesystem authority, not cryptographic signatures.
+
 ### Proposal review
 
 Choose `--mode proposal-review` to assess an existing proposal before doing

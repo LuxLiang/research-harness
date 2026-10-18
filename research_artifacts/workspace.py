@@ -1211,6 +1211,16 @@ class ArtifactWorkspace:
                                 artifact_id,
                             )
                         )
+                if scheme in {'LEAN', 'AXIOM_AUDIT'} and assessment.get('outcome') == 'PASS':
+                    from .formal_evidence import validate_formal_review
+                    target = record.data.get('target', {}).get('artifact_ref', {})
+                    claim = index.get(target.get('id'))
+                    try:
+                        if claim is None or claim.kind != 'ScientificClaim':
+                            raise ValueError('Formal Review must target a ScientificClaim')
+                        validate_formal_review(self.root, record.data, claim.data)
+                    except (ValueError, TypeError, KeyError, OSError, RuntimeError) as exc:
+                        issues.append(ValidationIssue(str(record.path), 'formal-tool-evidence', str(exc), artifact_id))
         return issues
 
     def _validate_proposal_contracts(

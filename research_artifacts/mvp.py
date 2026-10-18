@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import subprocess
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol
@@ -550,7 +551,7 @@ class SyntheticSkillRuntime:
         self.service.stage_proposal(
             proposal_id=proposal_id, project_id=str(action["project_id"]), action_id=str(action["action_id"]),
             operation="CREATE", artifact_id=str(candidate["id"]), kind=str(candidate["kind"]), base_revision=None,
-            bundle_sha256=str(bundle["bundle_sha256"]), proposer_session_id=f"synthetic-{action['action_id']}", candidate=candidate,
+            bundle_sha256=str(bundle["bundle_sha256"]), proposer_session_id=str(self._actor(str(action['skill']), action)['session_id']), candidate=candidate,
         )
         return proposal_id
 
@@ -564,7 +565,7 @@ class SyntheticSkillRuntime:
             proposal_id=proposal_id, project_id=str(action["project_id"]), action_id=str(action["action_id"]),
             operation="REVISE", artifact_id=str(candidate["id"]), kind=str(candidate["kind"]),
             base_revision=int(current.data["revision"]), bundle_sha256=str(bundle["bundle_sha256"]),
-            proposer_session_id=f"synthetic-{action['action_id']}", candidate=candidate,
+            proposer_session_id=str(self._actor(str(action['skill']), action)['session_id']), candidate=candidate,
         )
         return proposal_id
 
@@ -725,6 +726,7 @@ class SyntheticSkillRuntime:
 
     def _skill_theory_development(self, action, bundle):
         claim = self._target(bundle); literature = self._artifact(bundle, "LiteratureEvidence")
+        claim['tags'] = sorted(set(claim.get('tags', [])) | {'synthetic'})
         claim.update({"claim_type": "THEOREM", "status": "SUPPORTED",
                       "statement": "Given immutable revision pins and atomic commits, accepted scientific state is recoverable without conversation history.",
                       "assumptions": [{"id": "atomic-commit", "statement": "Canonical artifact and checkpoint writes are atomic."}],
@@ -735,10 +737,19 @@ class SyntheticSkillRuntime:
     def _skill_lean_formalization(self, action, bundle):
         claim = self._target(bundle)
         claim["verification"]["protocol"] = "Pinned Lean 4 synthetic theorem with explicit assumption/conclusion mapping."
-        claim["verification"]["resource_refs"].extend([
-            {"uri": "https://example.invalid/lean/Core.lean", "sha256": "2"*64, "media_type": "text/plain", "description": "Lean theorem source"},
-            {"uri": "https://example.invalid/lean/mapping.json", "sha256": "3"*64, "media_type": "application/json", "description": "Bidirectional semantic mapping"},
-        ])
+        directory = self.root / 'projects' / action['project_id'] / 'resources/lean/synthetic'
+        directory.mkdir(parents=True, exist_ok=True)
+        for filename, content in {
+            'Core.lean': 'theorem core (p : Prop) (h : p) : p := h\n',
+            'mapping.json': json.dumps({'target_theorems': {'Core.lean': ['core']}}) + '\n',
+        }.items():
+            path = directory / filename
+            path.write_text(content, encoding='utf-8')
+            claim['verification']['resource_refs'].append({
+                'uri': str(path.relative_to(self.root)), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                'media_type': 'application/json' if filename.endswith('.json') else 'text/plain',
+                'description': 'Synthetic formalization resource',
+            })
         return [self._revise(action, bundle, claim, "lean-formalization")], None
 
     def _skill_theory_verification(self, action, bundle):
@@ -764,15 +775,15 @@ class SyntheticSkillRuntime:
         )
         if result.outcome != "PASS":
             raise RuntimeValidationError(f"synthetic Lean adapter failed: {result.outcome}")
-        resource = {
-            "uri": str(report.relative_to(self.root)),
-            "sha256": result.report_sha256,
-            "media_type": "application/json",
-            "description": "Deterministic Lean build and axiom audit",
-        }
+        from .formal_evidence import record_lean_execution
+        resources = record_lean_execution(
+            self.root, report_path=report, claim=claim, action_id=action['action_id'],
+            bundle_sha256=bundle['bundle_sha256'], session_id=self._actor('lean-verification', action)['session_id'],
+            synthetic=True,
+        )
         ids = bundle["allowed_outputs"]["create_ids"]
-        lean_review = self._review(action, bundle, review_id=ids[0], target=claim, scheme="LEAN", outcome="PASS", reviewer_type="LEAN", resources=[resource])
-        axiom_review = self._review(action, bundle, review_id=ids[1], target=claim, scheme="AXIOM_AUDIT", outcome="PASS", reviewer_type="AXIOM_AUDIT", resources=[resource])
+        lean_review = self._review(action, bundle, review_id=ids[0], target=claim, scheme="LEAN", outcome="PASS", reviewer_type="LEAN", resources=resources)
+        axiom_review = self._review(action, bundle, review_id=ids[1], target=claim, scheme="AXIOM_AUDIT", outcome="PASS", reviewer_type="AXIOM_AUDIT", resources=resources)
         return [self._create(action, bundle, lean_review, "lean-review"), self._create(action, bundle, axiom_review, "axiom-review")], None
 
     def _skill_semantic_alignment_review(self, action, bundle):

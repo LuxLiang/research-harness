@@ -321,6 +321,9 @@ export function registerResearchTools(ctx: Context, sidecar: SidecarClient, scop
     },
     output,
     execute: async (args: any, exec) => sidecar.call('tool.lean_verify', {
+      project_id: scope.projectId,
+      action_id: scope.actionId,
+      session_id: scope.proposerSessionId,
       project_dir: args.project_dir,
       source_paths: parseJsonArray(args.source_paths_json, 'source_paths_json'),
       target_theorems: parseJsonObject(args.target_theorems_json, 'target_theorems_json'),

@@ -588,11 +588,15 @@ class GoldenPilotRuntime(SyntheticSkillRuntime):
             build_command=None, timeout=600,
         )
         atomic_write_text(report_target, scratch_report.read_text(encoding="utf-8"))
-        resource = {"uri": str(report_target.relative_to(self.root)), "sha256": hashlib.sha256(report_target.read_bytes()).hexdigest(), "media_type": "application/json", "description": "Clean Lean build and axiom audit report"}
+        from .formal_evidence import record_lean_execution
+        resources = record_lean_execution(
+            self.root, report_path=report_target, claim=claim, action_id=action['action_id'],
+            bundle_sha256=bundle['bundle_sha256'], session_id=self._actor('lean-verification', action)['session_id'],
+        )
         ids = bundle["allowed_outputs"]["create_ids"]
-        lean_review = self._review(action, bundle, review_id=ids[0], target=claim, scheme="LEAN", outcome=result.outcome if result.outcome in {"PASS", "LEAN_PROOF_GAP", "LIBRARY_GAP", "FORMALIZATION_GAP", "MATHEMATICAL_FAILURE"} else "LEAN_PROOF_GAP", reviewer_type="LEAN", resources=[resource])
+        lean_review = self._review(action, bundle, review_id=ids[0], target=claim, scheme="LEAN", outcome=result.outcome if result.outcome in {"PASS", "LEAN_PROOF_GAP", "LIBRARY_GAP", "FORMALIZATION_GAP", "MATHEMATICAL_FAILURE"} else "LEAN_PROOF_GAP", reviewer_type="LEAN", resources=resources)
         axiom_outcome = "PASS" if result.axiom_audit_passed else ("SORRY_FOUND" if any(item.startswith("SORRY") for item in result.findings) else "UNAPPROVED_AXIOM")
-        axiom_review = self._review(action, bundle, review_id=ids[1], target=claim, scheme="AXIOM_AUDIT", outcome=axiom_outcome, reviewer_type="AXIOM_AUDIT", resources=[resource])
+        axiom_review = self._review(action, bundle, review_id=ids[1], target=claim, scheme="AXIOM_AUDIT", outcome=axiom_outcome, reviewer_type="AXIOM_AUDIT", resources=resources)
         if result.outcome != "PASS" or axiom_outcome != "PASS":
             raise RuntimeValidationError(f"formal pilot failed deterministic Lean gate: {result.outcome}/{axiom_outcome}")
         return [self._create(action, bundle, lean_review, "lean-review"), self._create(action, bundle, axiom_review, "axiom-review")], None

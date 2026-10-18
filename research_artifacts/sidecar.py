@@ -25,6 +25,7 @@ from .orchestrator import (
 from .runtime_types import RUNTIME_PROTOCOL, RuntimeIntegrationError, json_value
 from .transactions import ScientificTransaction
 from .tool_adapters import ExperimentExecutionAdapter, LeanToolAdapter
+from .formal_evidence import claim_inputs, record_lean_execution
 from .workspace import ArtifactError, ArtifactValidationError, RevisionConflict
 
 
@@ -95,7 +96,7 @@ class SidecarServer:
             "proposal.write": lambda p: self.academic.proposal_write(**dict(p)),
             "action.preview": lambda p: self.actions.preview(str(p["project_id"])),
             "action.compile": lambda p: self.actions.compile(**dict(p)),
-            "tool.lean_verify": lambda p: self.lean.verify(**dict(p)).__dict__,
+            "tool.lean_verify": self._lean_verify,
             "tool.experiment_run": self._experiment_run,
             "context.build": lambda p: self.contexts.build(**dict(p)),
             "orchestrator.inspect": lambda p: self.orchestrator.store.load(str(p["project_id"])),
@@ -178,6 +179,33 @@ class SidecarServer:
         value = dict(params)
         value["operation"] = operation
         return self.artifacts.stage_proposal(**value).to_dict()
+
+    def _lean_verify(self, params: Mapping[str, Any]) -> dict[str, Any]:
+        value = dict(params)
+        project_id = str(value.pop('project_id'))
+        action_id = str(value.pop('action_id'))
+        session_id = str(value.pop('session_id'))
+        context = self.artifacts._load_context(project_id, action_id)
+        if context.get('role') != 'lean-verification':
+            raise RuntimeIntegrationError('Lean acceptance evidence requires a lean-verification action')
+        allowed = set(context['allowed_outputs']['artifact_ids'])
+        claims = [item['content'] for item in context['artifacts']
+                  if item['id'] in allowed and item['kind'] == 'ScientificClaim']
+        if len(claims) != 1:
+            raise RuntimeIntegrationError('Lean action must pin exactly one target Claim')
+        claim = claims[0]
+        expected = claim_inputs(self.root, claim)
+        if value.get('target_theorems') != expected['target_theorems']:
+            raise RuntimeIntegrationError('Lean targets differ from the frozen semantic mapping')
+        # The model cannot choose a canonical report or receipt destination.
+        value['report_path'] = self.artifacts.action_dir(project_id, action_id) / 'lean-tool-report.json'
+        result = self.lean.verify(**value)
+        resources = record_lean_execution(
+            self.root, report_path=result.report_path, claim=claim,
+            action_id=action_id, bundle_sha256=context['bundle_sha256'], session_id=session_id,
+        )
+        return {**result.__dict__, 'report_path': str(self.root / resources[0]['uri']),
+                'evidence_resources': resources}
 
     def _experiment_run(self, params: Mapping[str, Any]) -> dict[str, Any]:
         value = dict(params)

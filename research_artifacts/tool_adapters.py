@@ -9,6 +9,7 @@ import re
 import shlex
 import subprocess
 import sys
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
@@ -342,9 +343,7 @@ class ExperimentExecutionAdapter:
             "experiment": experiment.get("id"), "revision": experiment.get("revision"),
             "protocol": actual_hash, "seed": seed, "repetition": repetition,
         })[:16]
-        for existing in experiment.get("runs", []):
-            if existing.get("run_id") == run_id:
-                return {"run": existing, "reused": True}
+        existing = next((run for run in experiment.get('runs', []) if run.get('run_id') == run_id), None)
         code = experiment.get("code_location", {})
         entrypoint = code.get("entrypoint")
         commit = code.get("git_commit")
@@ -356,6 +355,7 @@ class ExperimentExecutionAdapter:
         if run_state.is_file():
             persisted = json.loads(run_state.read_text(encoding="utf-8"))
             if persisted.get("status") == "COMMITTED" and isinstance(persisted.get("run"), dict):
+                self._validate_reused_run(persisted['run'], run_id, actual_hash, commit)
                 return {"run": persisted["run"], "reused": True}
             if persisted.get("status") == "RUNNING":
                 # The previous process crossed the durable dispatch boundary but
@@ -380,8 +380,24 @@ class ExperimentExecutionAdapter:
                 )
                 atomic_write_json(run_state, {"status": "COMMITTED", "run": run})
                 return {"run": run, "reused": True}
+        if existing is not None:
+            raise RuntimeValidationError('Existing experiment run lacks a matching host execution journal')
         repository = self._repository(experiment)
         self._validate_datasets(experiment, repository=repository)
+        with self._pinned_repository(repository, commit, output_dir) as snapshot:
+            original_root, snapshot_root, pinned_repository, actual_commit = snapshot
+            self._validate_snapshot_datasets(experiment, repository, original_root, snapshot_root)
+            return self._dispatch(
+                experiment=experiment, seed=seed, actual_hash=actual_hash,
+                output_dir=output_dir, run_state=run_state, run_id=run_id,
+                entrypoint=entrypoint, repository=pinned_repository,
+                original_root=original_root, snapshot_root=snapshot_root,
+                code_commit=actual_commit, timeout=timeout, extra_env=extra_env,
+            )
+
+    def _dispatch(self, *, experiment, seed, actual_hash, output_dir, run_state,
+                  run_id, entrypoint, repository, original_root, snapshot_root,
+                  code_commit, timeout, extra_env):
         # Keep the protocol-visible output directory empty at dispatch time.
         # The adapter's durable run journal must exist before dispatch, but it
         # is host metadata and must not make `{run_output_dir}` violate a
@@ -398,8 +414,42 @@ class ExperimentExecutionAdapter:
             experiment=experiment,
             output_dir=payload_dir,
         )
+        command = [item if Path(item).is_absolute() and Path(item).resolve().is_relative_to(output_dir)
+                   else self._snapshot_token(item, original_root, snapshot_root) for item in command]
+        interpreter = Path(command[0]).name
+        if interpreter.startswith('python') or interpreter in {'bash', 'sh', 'node', 'Rscript', 'julia'}:
+            position = 1
+            while position < len(command) and command[position].startswith('-'):
+                option = command[position]
+                if option == '-c':  # Literal code is itself part of the locked protocol.
+                    position = len(command)
+                    break
+                if option == '-m' and interpreter.startswith('python'):
+                    module = command[position + 1] if position + 1 < len(command) else ''
+                    module_path = repository / module.replace('.', '/')
+                    if not module or not (module_path.with_suffix('.py').is_file() or (module_path / '__main__.py').is_file()):
+                        raise RuntimeValidationError('Experiment module must exist in the pinned code snapshot')
+                    position = len(command)
+                    break
+                position += 2 if option in {'-X', '-W', '--check-hash-based-pycs'} else 1
+            if position < len(command):
+                path = Path(command[position])
+                path = (repository / path).resolve() if not path.is_absolute() else path.resolve()
+                if not path.is_relative_to(snapshot_root) or not path.is_file():
+                    raise RuntimeValidationError('Experiment script must exist in the pinned code snapshot')
+                command[position] = str(path)
+        manifest = output_dir / 'execution-manifest.json'
+        atomic_write_json(manifest, {
+            'manifest_version': 'research-experiment-execution/v0.1',
+            'code_commit': code_commit, 'repository': str(original_root),
+            'snapshot_root': str(snapshot_root), 'command': command,
+        })
         env = os.environ.copy()
         env.update(extra_env or {})
+        import_paths = [repository]
+        if (repository / 'src').is_dir():
+            import_paths.append(repository / 'src')
+        env["PYTHONPATH"] = os.pathsep.join(map(str, import_paths))
         env["RESEARCH_RUN_ID"] = run_id
         env["RESEARCH_SEED"] = str(seed)
         atomic_write_json(run_state, {
@@ -440,6 +490,10 @@ class ExperimentExecutionAdapter:
                 or (f"entrypoint exited {completed.returncode}" if completed.returncode != 0 else None)
             ),
         )
+        run['outputs'].append({
+            'uri': str(manifest), 'sha256': hashlib.sha256(manifest.read_bytes()).hexdigest(),
+            'media_type': 'application/json', 'description': 'Pinned execution manifest',
+        })
         atomic_write_json(run_state, {"status": "COMMITTED", "run": run})
         return {"run": run, "reused": False}
 
@@ -480,6 +534,84 @@ class ExperimentExecutionAdapter:
         if failure_reason is not None:
             run["failure_reason"] = failure_reason
         return run
+
+    @staticmethod
+    def _snapshot_token(token: str, original_root: Path, snapshot_root: Path) -> str:
+        path = Path(token)
+        if path.is_absolute():
+            if path.resolve().is_relative_to(original_root):
+                return str(snapshot_root / path.resolve().relative_to(original_root))
+            return token
+        # Embedded absolute paths cannot be safely rewritten as shell text.
+        if str(original_root) in token:
+            raise RuntimeValidationError('Repository paths in experiment commands must be standalone tokens')
+        return token
+
+    @contextmanager
+    def _pinned_repository(self, repository: Path, commit: str, output_dir: Path):
+        if not re.fullmatch(r'[0-9a-f]{40}', commit):
+            raise RuntimeValidationError('Experiment requires a full pinned Git commit')
+
+        def git(*args: str, check: bool = True):
+            try:
+                result = subprocess.run(['git', '-c', 'core.hooksPath=/dev/null', '-C', str(repository), *args],
+                                        text=True, capture_output=True, timeout=60, check=False)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                raise RuntimeValidationError('Pinned experiment Git checkout unavailable') from exc
+            if check and result.returncode:
+                raise RuntimeValidationError('Pinned experiment Git checkout failed: ' + result.stderr.strip())
+            return result
+
+        original_root = Path(git('rev-parse', '--show-toplevel').stdout.strip()).resolve()
+        actual = git('rev-parse', '--verify', commit + '^{commit}').stdout.strip()
+        if actual != commit:
+            raise RuntimeValidationError('Experiment commit identity mismatch')
+        if git('ls-tree', '-r', commit).stdout.find('160000 commit ') >= 0:
+            raise RuntimeValidationError('Pinned experiment submodules must be materialized explicitly')
+        checkout = output_dir / 'code-checkout'
+        git('worktree', 'add', '--detach', str(checkout), commit)
+        try:
+            for path in checkout.rglob('*'):
+                if path.is_symlink() and not path.resolve().is_relative_to(checkout):
+                    raise RuntimeValidationError('Pinned code snapshot contains an escaping symlink')
+            pinned_repository = checkout / repository.relative_to(original_root)
+            if not pinned_repository.is_dir():
+                raise RuntimeValidationError('Experiment repository directory is absent from the pinned commit')
+            yield original_root, checkout, pinned_repository, actual
+        finally:
+            git('worktree', 'remove', '--force', str(checkout))
+
+    @staticmethod
+    def _validate_reused_run(run, run_id, protocol_hash, commit):
+        if (run.get('run_id') != run_id or run.get('protocol_sha256') != protocol_hash
+                or run.get('code_commit') != commit):
+            raise RuntimeValidationError('Persisted experiment run identity mismatch')
+        if run.get('status') != 'SUCCEEDED':
+            return
+        manifests = []
+        for resource in run.get('outputs', []):
+            path = Path(resource.get('uri', ''))
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != resource.get('sha256'):
+                raise RuntimeValidationError('Persisted experiment output hash mismatch')
+            if path.name == 'execution-manifest.json':
+                manifests.append(json.loads(path.read_text()))
+        if len(manifests) != 1 or manifests[0].get('code_commit') != commit:
+            raise RuntimeValidationError('Persisted run lacks a pinned execution manifest')
+
+    def _validate_snapshot_datasets(self, experiment, repository, original_root, snapshot_root):
+        for dataset in experiment.get('datasets', []):
+            uri = dataset.get('uri')
+            if not isinstance(uri, str) or '://' in uri:
+                continue
+            original = Path(uri)
+            if not original.is_absolute():
+                original = (self.workspace_root or repository) / original
+            original = original.resolve()
+            if original.is_relative_to(original_root):
+                pinned = snapshot_root / original.relative_to(original_root)
+                if (not pinned.is_file() or
+                        hashlib.sha256(pinned.read_bytes()).hexdigest() != dataset.get('sha256')):
+                    raise RuntimeValidationError('Pinned snapshot dataset differs from the locked protocol: ' + uri)
 
     def _repository(self, experiment: Mapping[str, Any]) -> Path:
         value = Path(str(experiment.get("code_location", {}).get("repository", ".")))

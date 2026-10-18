@@ -42,8 +42,9 @@ Independently build Lean proof resources and audit their axioms.
 1. Pin the actual Lean and mathlib environment externally; version labels alone do not attest the toolchain.
 2. Call research_lean_verify with target_theorems_json mapping every supplied source path to a nonempty list of qualified theorem names from the frozen semantic mapping, for example {"Main.lean": ["Result.main_theorem"]}.
 3. Require the tool to compile exact source snapshots and generate an axiom report for every target; a preparatory build alone cannot establish PASS.
-4. Reject sorry, sorryAx, and custom axioms outside the project allowlist and record actual axioms.
-5. Distinguish proof, library, formalization, and suspected mathematical failures.
+4. Copy both returned evidence_resources references into LEAN and AXIOM_AUDIT Reviews; the controller requires the report and host execution receipt to match the frozen Claim, action, context, session, sources, and theorem mapping. Never manufacture a receipt or upgrade a failed tool result to PASS.
+5. Reject sorry, sorryAx, and custom axioms outside the project allowlist and record actual axioms.
+6. Distinguish proof, library, formalization, and suspected mathematical failures.
 
 ## Completion Conditions
 

@@ -46,7 +46,7 @@ jobs:
       - name: Run real Lean verification regressions
         env:
           RESEARCH_HARNESS_TEST_LEAN: ${{ runner.temp }}/lean-4.19.0-linux/bin/lean
-        run: python -m unittest tests.test_lean_verification
+        run: python -m unittest tests.test_lean_verification tests.test_p0_evidence
   integration:
     runs-on: ubuntu-latest
     defaults:

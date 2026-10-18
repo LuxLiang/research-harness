@@ -90,6 +90,9 @@ test('Lean verification forwards source-to-theorem mapping and rejects non-objec
   const exec = { signal: new AbortController().signal }
   await tool.execute(args, exec)
   assert.equal(calls[0].method, 'tool.lean_verify')
+  assert.equal(calls[0].params.project_id, 'proj-demo')
+  assert.equal(calls[0].params.action_id, 'action-lean')
+  assert.equal(calls[0].params.session_id, 'reviewer')
   assert.deepEqual(calls[0].params.target_theorems, { 'Main.lean': ['Result.main'] })
   await assert.rejects(tool.execute({ ...args, target_theorems_json: '[]' }, exec), /object/)
   assert.equal(calls.length, 1)

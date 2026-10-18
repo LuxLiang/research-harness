@@ -729,6 +729,18 @@ class ArtifactService:
                         f"{role} Review requires assessment scheme in "
                         + ", ".join(sorted(expected_schemes))
                     )
+            if role == 'lean-verification' and candidate.get('assessment', {}).get('outcome') == 'PASS':
+                from .formal_evidence import validate_formal_review
+                target = candidate.get('target', {}).get('artifact_ref', {})
+                pinned = next((item for item in context.get('artifacts', [])
+                               if item['id'] == target.get('id') and item['kind'] == 'ScientificClaim'
+                               and item['id'] in context['allowed_outputs']['artifact_ids']), None)
+                if pinned is None or target.get('revision') != pinned['content']['revision']:
+                    raise RuntimeValidationError('Formal Review must target the frozen action Claim')
+                validate_formal_review(self.root, candidate, pinned['content'], {
+                    'action_id': proposal.action_id, 'bundle_sha256': proposal.bundle_sha256,
+                    'session_id': proposal.proposer_session_id,
+                })
             if role == "final-review":
                 outcome = candidate.get("assessment", {}).get("outcome")
                 unresolved = [

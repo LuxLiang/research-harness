@@ -51,6 +51,17 @@ rules. Execution appends pinned runs; independent verification applies the
 preregistered rules. Failed, negative, contradictory, and inconclusive outcomes
 remain part of the record.
 
+The execution adapter checks out the full pinned Git commit into a detached,
+temporary worktree. Scripts and imports resolve from that checkout; absolute
+repository paths in command arguments are remapped to it. Repository paths must
+be standalone argument tokens. Missing commits, scripts outside the snapshot,
+escaping symlinks, and unmaterialized submodules fail before dispatch. Datasets
+inside the repository must match their pinned snapshot content. External data
+and installed tools/dependencies still require their own pinned environment.
+Each successful run includes a hashed execution manifest, and reused outputs
+are checked against the host journal and their hashes. Legacy successful runs
+without a manifest cannot be reused as newly verified execution evidence.
+
 Manuscript claims, results, novelty statements, figures, and tables must map to
 accepted evidence through `paper/traceability.yaml`. Writers cannot create or
 revise ScientificClaim artifacts. A valid traceability file does not itself

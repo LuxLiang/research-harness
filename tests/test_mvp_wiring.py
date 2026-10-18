@@ -322,6 +322,10 @@ class DeterministicToolAdapterTestCase(unittest.TestCase):
             "locked_at": "2026-08-21T00:00:00Z",
         }
         with tempfile.TemporaryDirectory() as value:
+            from tests.git_helpers import committed_code
+            experiment['code_location']['repository'] = value
+            experiment['code_location']['git_commit'] = committed_code(Path(value))
+            experiment['protocol_lock']['sha256'] = adapter.protocol_hash(experiment)
             first = adapter.execute(experiment=experiment, seed=0, repetition=0, run_root=value)
             experiment["runs"] = [first["run"]]
             second = adapter.execute(experiment=experiment, seed=0, repetition=0, run_root=value)
@@ -370,6 +374,8 @@ class DeterministicToolAdapterTestCase(unittest.TestCase):
                 "runs": [],
             }
             adapter = ExperimentExecutionAdapter(workspace_root=root)
+            from tests.git_helpers import committed_code
+            experiment['code_location']['git_commit'] = committed_code(root)
             experiment["protocol_lock"] = {
                 "revision": 2, "sha256": adapter.protocol_hash(experiment),
                 "locked_at": "2026-08-21T00:00:00Z",
